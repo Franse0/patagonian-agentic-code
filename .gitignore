@@ -93,3 +93,7 @@ specs/*.temp
 # ADW setup/reference docs (not part of the project)
 SETUP_SUMMARY.md
 BUILD_WITH_AGENTIC_CODE.md
+issues.md
+
+# Firebase credentials (nunca commitear)
+js/firebase-config.js
