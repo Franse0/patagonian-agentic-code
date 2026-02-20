@@ -69,19 +69,60 @@ import { FirebaseGame } from './firebase-game.js';
   }
 
   function handleAttacksChange(attacks) {
-    var opponentKey = window.Game.playerKey === 'player1' ? 'player2' : 'player1';
-    var opponentAttacks = attacks.filter(function (a) { return a.playerId === opponentKey; });
-    opponentAttacks.forEach(function (attack) {
-      var cellId = 'cell-' + attack.cell;
-      var el = document.getElementById(cellId);
-      if (!el) return;
-      if (el.classList.contains('cell--hit-received') || el.classList.contains('cell--miss-received')) return;
-      if (attack.result === 'hit') {
-        el.classList.add('cell--hit-received');
-      } else {
-        el.classList.add('cell--miss-received');
+    var myKey = window.Game.playerKey;
+    var opponentKey = myKey === 'player1' ? 'player2' : 'player1';
+
+    attacks.forEach(function (attack) {
+      if (attack.playerId === opponentKey) {
+        // Ataque recibido: pintar en tablero propio
+        var cellId = 'cell-' + attack.cell;
+        var el = document.getElementById(cellId);
+        if (el && !el.classList.contains('cell--hit-received') && !el.classList.contains('cell--miss-received')) {
+          el.classList.add(attack.result === 'hit' ? 'cell--hit-received' : 'cell--miss-received');
+        }
+      } else if (attack.playerId === myKey) {
+        // Ataque propio: re-pintar en tablero enemigo (re-sync desde Firebase)
+        var enemyCellId = 'enemy-cell-' + attack.cell;
+        var enemyEl = document.getElementById(enemyCellId);
+        if (enemyEl && !enemyEl.classList.contains('cell--attacked--hit') && !enemyEl.classList.contains('cell--attacked--miss')) {
+          enemyEl.classList.add(attack.result === 'hit' ? 'cell--attacked--hit' : 'cell--attacked--miss');
+        }
       }
     });
+
+    // Historial: últimos 5 ataques (más reciente primero)
+    var historyPanel = document.getElementById('attack-history');
+    var historyList = document.getElementById('attack-history-list');
+    if (!historyPanel || !historyList) return;
+
+    var sorted = attacks.slice().sort(function (a, b) {
+      return (b.timestamp || 0) - (a.timestamp || 0);
+    });
+    var recent = sorted.slice(0, 5);
+
+    historyList.innerHTML = '';
+    recent.forEach(function (attack) {
+      var li = document.createElement('li');
+      li.className = 'attack-history-item attack-history-item--' + attack.result;
+
+      var playerLabel = attack.playerId === myKey ? 'Tú' : 'Rival';
+
+      var playerSpan = document.createElement('span');
+      playerSpan.className = 'attack-history-player';
+      playerSpan.textContent = playerLabel + ' → ' + attack.cell;
+
+      var resultSpan = document.createElement('span');
+      resultSpan.className = 'attack-history-result';
+      resultSpan.textContent = attack.result === 'hit' ? 'Impacto' : 'Agua';
+
+      li.appendChild(playerSpan);
+      li.appendChild(resultSpan);
+      historyList.appendChild(li);
+    });
+
+    if (attacks.length > 0) {
+      historyPanel.hidden = false;
+    }
   }
 
   function getFleetState() {

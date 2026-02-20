@@ -237,6 +237,57 @@ header h1 {
   font-weight: 600;
 }
 
+/* === Attack history panel === */
+#attack-history {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 180px;
+  max-width: 220px;
+}
+
+#attack-history h3 {
+  color: var(--color-heading);
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+#attack-history-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0;
+}
+
+.attack-history-item {
+  font-size: 0.82rem;
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.attack-history-item--hit .attack-history-result {
+  color: var(--color-hit);
+  font-weight: 700;
+}
+
+.attack-history-item--miss .attack-history-result {
+  color: var(--color-miss);
+}
+
+.attack-history-player {
+  font-size: 0.75rem;
+  opacity: 0.7;
+}
+
 /* === Board === */
 .board-wrapper {
   background: var(--color-surface);
@@ -457,6 +508,16 @@ header h1 {
     flex-direction: column;
     align-items: center;
     gap: 1.5rem;
+  }
+  #attack-history {
+    max-width: 100%;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
+  #attack-history-list {
+    flex-direction: row;
+    flex-wrap: wrap;
   }
 }
 
