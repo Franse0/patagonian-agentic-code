@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Batalla Naval</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <header>
+    <h1>Batalla Naval</h1>
+    <div id="game-status" role="status" aria-live="polite">Colocá tus barcos para comenzar</div>
+  </header>
+
+  <main id="game-container">
+    <!-- Columna del jugador local -->
+    <section class="board-column" id="player-column">
+      <h2>Tu tablero</h2>
+
+      <!-- Fase de colocación -->
+      <section id="placement-phase" aria-label="Fase de colocación de barcos">
+        <nav id="ship-list" aria-label="Barcos disponibles">
+          <button class="ship-item" data-ship-id="carrier" data-ship-size="5" type="button" aria-label="Portaaviones - 5 celdas">
+            <span class="ship-name">Portaaviones</span>
+            <span class="ship-cells">
+              <span class="ship-cell-block"></span><span class="ship-cell-block"></span><span class="ship-cell-block"></span><span class="ship-cell-block"></span><span class="ship-cell-block"></span>
+            </span>
+          </button>
+          <button class="ship-item" data-ship-id="battleship" data-ship-size="4" type="button" aria-label="Acorazado - 4 celdas">
+            <span class="ship-name">Acorazado</span>
+            <span class="ship-cells">
+              <span class="ship-cell-block"></span><span class="ship-cell-block"></span><span class="ship-cell-block"></span><span class="ship-cell-block"></span>
+            </span>
+          </button>
+          <button class="ship-item" data-ship-id="cruiser" data-ship-size="3" type="button" aria-label="Crucero - 3 celdas">
+            <span class="ship-name">Crucero</span>
+            <span class="ship-cells">
+              <span class="ship-cell-block"></span><span class="ship-cell-block"></span><span class="ship-cell-block"></span>
+            </span>
+          </button>
+          <button class="ship-item" data-ship-id="submarine" data-ship-size="3" type="button" aria-label="Submarino - 3 celdas">
+            <span class="ship-name">Submarino</span>
+            <span class="ship-cells">
+              <span class="ship-cell-block"></span><span class="ship-cell-block"></span><span class="ship-cell-block"></span>
+            </span>
+          </button>
+          <button class="ship-item" data-ship-id="destroyer" data-ship-size="2" type="button" aria-label="Destructor - 2 celdas">
+            <span class="ship-name">Destructor</span>
+            <span class="ship-cells">
+              <span class="ship-cell-block"></span><span class="ship-cell-block"></span>
+            </span>
+          </button>
+        </nav>
+        <div class="placement-controls">
+          <button id="btn-orientation" type="button" aria-pressed="false" aria-label="Orientación: Horizontal">H</button>
+          <button id="btn-random" type="button">Aleatorio</button>
+          <button id="btn-ready" type="button" disabled>Listo</button>
+        </div>
+      </section>
+
+      <!-- Tablero del jugador -->
+      <div class="board-wrapper">
+        <div id="player-board" class="board" role="grid" aria-label="Tu tablero de juego">
+        </div>
+      </div>
+    </section>
+
+    <!-- Columna del enemigo -->
+    <section class="board-column" id="enemy-column">
+      <h2>Tablero enemigo</h2>
+      <div class="board-wrapper">
+        <div id="enemy-board" class="board" role="grid" aria-label="Tablero del enemigo">
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/placement.js"></script>
+  <script src="js/game.js"></script>
+</body>
+</html>
