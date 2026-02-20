@@ -100,6 +100,19 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     if (desc) desc.hidden = false;
   }
 
+  function popStatus(message) {
+    var el = document.getElementById('game-status');
+    if (!el) return;
+    el.textContent = message;
+    el.classList.remove('status--pop');
+    void el.offsetWidth; // reflow to re-trigger animation
+    el.classList.add('status--pop');
+    el.addEventListener('animationend', function h() {
+      el.classList.remove('status--pop');
+      el.removeEventListener('animationend', h);
+    });
+  }
+
   function onReady() {
     fleetState = Placement.getFleetState();
 
@@ -177,9 +190,20 @@ function checkVictoryCondition(myAttacks, opponentShips) {
           return newlySunk.indexOf(s.id) !== -1;
         })[0];
         if (sunkShip) {
-          var status = document.getElementById('game-status');
-          if (status) status.textContent = '¡Hundiste el ' + sunkShip.name + '!';
+          popStatus('¡Hundiste el ' + sunkShip.name + '!');
         }
+        // Animate sunk ship cells on enemy board
+        newlySunk.forEach(function (shipId) {
+          var shipCells = enemyShips[shipId] || [];
+          shipCells.forEach(function (cellId) {
+            var rawId = cellId.replace('cell-', '');
+            var el = document.getElementById('enemy-cell-' + rawId);
+            if (el) {
+              el.classList.add('cell--anim-sunk');
+              setTimeout(function () { el.classList.remove('cell--anim-sunk'); }, 700);
+            }
+          });
+        });
       }
       _prevEnemySunkIds = enemySunk;
     }
@@ -197,9 +221,13 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     var indicator = document.getElementById('turn-indicator');
     if (indicator) {
       indicator.hidden = false;
+      indicator.classList.remove('turn-indicator--pulse');
       indicator.textContent = _isMyTurn ? 'Tu turno' : 'Turno del oponente';
       if (_isMyTurn) {
         indicator.classList.add('turn-indicator--active');
+        requestAnimationFrame(function () {
+          indicator.classList.add('turn-indicator--pulse');
+        });
       } else {
         indicator.classList.remove('turn-indicator--active');
       }
@@ -212,8 +240,7 @@ function checkVictoryCondition(myAttacks, opponentShips) {
         enemyBoard.classList.add('board--disabled');
       }
     }
-    var status = document.getElementById('game-status');
-    if (status) status.textContent = _isMyTurn ? 'Atacá el tablero enemigo' : 'Esperando ataque del oponente...';
+    popStatus(_isMyTurn ? 'Atacá el tablero enemigo' : 'Esperando ataque del oponente...');
   }
 
   function handleAttacksChange(attacks) {
@@ -227,6 +254,9 @@ function checkVictoryCondition(myAttacks, opponentShips) {
         var el = document.getElementById(cellId);
         if (el && !el.classList.contains('cell--hit-received') && !el.classList.contains('cell--miss-received')) {
           el.classList.add(attack.result === 'hit' ? 'cell--hit-received' : 'cell--miss-received');
+          var animClass = attack.result === 'hit' ? 'cell--anim-hit' : 'cell--anim-miss';
+          el.classList.add(animClass);
+          setTimeout(function () { el.classList.remove(animClass); }, 500);
         }
       } else if (attack.playerId === myKey) {
         // Ataque propio: re-pintar en tablero enemigo (re-sync desde Firebase)
@@ -234,6 +264,9 @@ function checkVictoryCondition(myAttacks, opponentShips) {
         var enemyEl = document.getElementById(enemyCellId);
         if (enemyEl && !enemyEl.classList.contains('cell--attacked--hit') && !enemyEl.classList.contains('cell--attacked--miss')) {
           enemyEl.classList.add(attack.result === 'hit' ? 'cell--attacked--hit' : 'cell--attacked--miss');
+          var enemyAnimClass = attack.result === 'hit' ? 'cell--anim-hit' : 'cell--anim-miss';
+          enemyEl.classList.add(enemyAnimClass);
+          setTimeout(function () { enemyEl.classList.remove(enemyAnimClass); }, 500);
         }
       }
     });
@@ -249,9 +282,10 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     var recent = sorted.slice(0, 5);
 
     historyList.innerHTML = '';
-    recent.forEach(function (attack) {
+    recent.forEach(function (attack, index) {
       var li = document.createElement('li');
       li.className = 'attack-history-item attack-history-item--' + attack.result;
+      if (index === 0) li.classList.add('attack-history-item--new');
 
       var playerLabel = attack.playerId === myKey ? 'Tú' : 'Rival';
 
@@ -280,6 +314,14 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     var endScreen = document.getElementById('end-screen');
     hideScreen(gameContainer);
     showScreen(endScreen);
+
+    if (endScreen) {
+      endScreen.classList.add('end-screen--enter');
+      endScreen.addEventListener('animationend', function h() {
+        endScreen.classList.remove('end-screen--enter');
+        endScreen.removeEventListener('animationend', h);
+      });
+    }
 
     var isWinner = (winnerKey === window.Game.playerKey);
     var resultEl = document.getElementById('end-result');
@@ -386,6 +428,14 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     function openRules() {
       if (!rulesModal) return;
       rulesModal.hidden = false;
+      var dialog = rulesModal.querySelector('.rules-dialog');
+      if (dialog) {
+        dialog.classList.add('rules-dialog--enter');
+        dialog.addEventListener('animationend', function h() {
+          dialog.classList.remove('rules-dialog--enter');
+          dialog.removeEventListener('animationend', h);
+        });
+      }
       btnCloseRules && btnCloseRules.focus();
     }
     function closeRules() {
