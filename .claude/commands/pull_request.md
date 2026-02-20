@@ -40,7 +40,7 @@ Crea un pull request con contexto completo de todos los commits en la rama actua
 ## GitHub CLI Command
 
 ```bash
-gh pr create --title "PR title here" --body "$(cat <<'EOF'
+gh pr create --base main --no-draft --title "PR title here" --body "$(cat <<'EOF'
 ## Summary
 - Implemented responsive navigation menu
 - Added mobile hamburger menu with smooth animations
@@ -66,7 +66,7 @@ EOF
 - Devuelve la URL del PR cuando termines
 - El título debe estar orientado a la acción (ej., "Add responsive navigation" no "Responsive navigation")
 - Mira TODOS los commits en la rama, no solo el último
-- La rama base típicamente debería ser `main` o `master`
+- **SIEMPRE usa `--base main --no-draft`** en el comando `gh pr create` — nunca omitas estos flags
 
 ## Report
 
