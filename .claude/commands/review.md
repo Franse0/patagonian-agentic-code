@@ -54,10 +54,11 @@ Revisa el trabajo realizado contra un archivo de especificación (specs/*.md) pa
 1. **Verificar que el servidor esté corriendo**: El servidor debe estar en `http://localhost:8000` (NO abrir archivos HTML directamente)
 
 2. **Usar herramienta de screenshots**: Crea un script Python con Selenium/Playwright:
+   - **IMPORTANTE**: Guarda el script en `review_image_dir/capture.py` (nunca en la raíz del proyecto)
    - Navega a `http://localhost:8000` o rutas específicas
    - Espera a que la página cargue completamente
    - Toma screenshots programáticamente
-   - Guarda en `review_image_dir`
+   - Guarda screenshots en `review_image_dir`
 
 3. **Ejemplo de script de captura**:
 ```python
