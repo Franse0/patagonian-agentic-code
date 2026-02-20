@@ -1,3 +1,6 @@
+/* Garantiza que el atributo HTML 'hidden' siempre oculte el elemento sin importar el CSS */
+[hidden] { display: none !important; }
+
 /* === CSS Custom Properties — Naval theme === */
 :root {
   --color-bg: #0a1628;
