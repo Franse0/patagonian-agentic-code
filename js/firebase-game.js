@@ -1,7 +1,7 @@
 /* firebase-game.js — Firebase lobby & room management for Batalla Naval */
 
 import { db } from './firebase-config.js';
-import { ref, set, update, get, onValue } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
+import { ref, set, update, get, onValue, push } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js";
 
 let _unsubscribe = null;
 
@@ -46,8 +46,29 @@ async function joinRoom(roomId, playerId) {
   return { roomId, playerKey: 'player2' };
 }
 
+async function setPlayerReady(roomId, playerKey, ships) {
+  await update(ref(db, `rooms/${roomId}/${playerKey}`), { ready: true, ships });
+  const snapshot = await get(ref(db, `rooms/${roomId}`));
+  const data = snapshot.val();
+  if (data.player1?.ready && data.player2?.ready) {
+    await update(ref(db, `rooms/${roomId}`), { status: 'playing', currentTurn: 'player1' });
+  }
+}
+
+async function submitAttack(roomId, attackerKey, cellId, result) {
+  await push(ref(db, `rooms/${roomId}/attacks`), { cell: cellId, attackerKey, result });
+  const nextTurn = attackerKey === 'player1' ? 'player2' : 'player1';
+  await update(ref(db, `rooms/${roomId}`), { currentTurn: nextTurn });
+  if (result === 'finished') {
+    await update(ref(db, `rooms/${roomId}`), { winner: attackerKey, status: 'finished' });
+  }
+}
+
 function listenRoom(roomId, callbacks) {
   destroy();
+  let _gameStarted = false;
+  let _lastTurn = null;
+  let _lastAttackCount = 0;
   const roomRef = ref(db, `rooms/${roomId}`);
   _unsubscribe = onValue(roomRef, (snapshot) => {
     const data = snapshot.val();
@@ -57,6 +78,24 @@ function listenRoom(roomId, callbacks) {
     }
     if (callbacks.onStatusChange) {
       callbacks.onStatusChange(data.status);
+    }
+    if (data.status === 'playing' && !_gameStarted && callbacks.onGameStart) {
+      _gameStarted = true;
+      callbacks.onGameStart(data);
+    }
+    if (data.currentTurn && data.currentTurn !== _lastTurn) {
+      _lastTurn = data.currentTurn;
+      if (callbacks.onTurnChange) callbacks.onTurnChange(data.currentTurn);
+    }
+    if (data.attacks && callbacks.onAttackReceived) {
+      const attackKeys = Object.keys(data.attacks);
+      if (attackKeys.length > _lastAttackCount) {
+        _lastAttackCount = attackKeys.length;
+        callbacks.onAttackReceived(data.attacks);
+      }
+    }
+    if (data.status === 'finished' && data.winner && callbacks.onGameEnd) {
+      callbacks.onGameEnd(data.winner);
     }
   });
 }
@@ -68,4 +107,4 @@ function destroy() {
   }
 }
 
-export const FirebaseGame = { createRoom, joinRoom, listenRoom, destroy };
+export const FirebaseGame = { createRoom, joinRoom, listenRoom, setPlayerReady, submitAttack, destroy };

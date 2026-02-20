@@ -10,6 +10,7 @@
   <header>
     <h1>Batalla Naval</h1>
     <div id="game-status" role="status" aria-live="polite">Colocá tus barcos para comenzar</div>
+    <div id="turn-indicator" hidden></div>
   </header>
 
   <section id="lobby">
@@ -74,6 +75,8 @@
         </div>
       </section>
 
+      <div id="waiting-opponent-msg" hidden>Esperando al oponente...</div>
+
       <!-- Tablero del jugador -->
       <div class="board-wrapper">
         <div id="player-board" class="board" role="grid" aria-label="Tu tablero de juego">
@@ -91,7 +94,15 @@
     </section>
   </main>
 
+  <div id="game-over-overlay" hidden>
+    <div class="game-over-card">
+      <h2 id="game-over-title"></h2>
+      <p id="game-over-subtitle"></p>
+    </div>
+  </div>
+
   <script type="module" src="js/placement.js"></script>
+  <script type="module" src="js/ui.js"></script>
   <script type="module" src="js/firebase-game.js"></script>
   <script type="module" src="js/game.js"></script>
 </body>

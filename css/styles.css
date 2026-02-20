@@ -16,6 +16,9 @@
   --color-btn-hover: #2e86de;
   --color-btn-disabled: #162d4a;
   --color-btn-text-disabled: #4a6a8a;
+  --color-hit: rgba(231, 76, 60, 0.85);
+  --color-miss: rgba(200, 214, 229, 0.35);
+  --color-sunk: rgba(192, 57, 43, 1);
   --board-size: 11; /* 1 label col/row + 10 cells */
   --cell-size: 38px;
 }
@@ -408,6 +411,93 @@ header h1 {
 #btn-orientation {
   flex: 0 0 auto;
   width: 44px;
+}
+
+/* === Cell hit/miss/sunk states === */
+.cell--hit {
+  background: var(--color-hit);
+}
+
+.cell--miss {
+  background: var(--color-miss);
+}
+
+.cell--sunk {
+  background: var(--color-sunk);
+}
+
+/* === Turn indicator === */
+#turn-indicator {
+  margin-top: 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  padding: 0.3rem 1rem;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.turn--mine {
+  color: var(--color-primary);
+  font-weight: 700;
+}
+
+.turn--opponent {
+  color: var(--color-text);
+  opacity: 0.6;
+}
+
+/* === Board interactivity === */
+.board--interactive .cell:hover {
+  background: var(--color-cell-hover);
+  cursor: crosshair;
+}
+
+.board:not(.board--interactive) .cell {
+  pointer-events: none;
+}
+
+/* === Waiting opponent message === */
+#waiting-opponent-msg {
+  color: var(--color-primary);
+  font-size: 0.95rem;
+  text-align: center;
+  padding: 0.5rem;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+/* === Game over overlay === */
+#game-over-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.game-over-card {
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: 10px;
+  padding: 2.5rem 3rem;
+  text-align: center;
+}
+
+.game-over-card h2 {
+  color: var(--color-heading);
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.game-over-card p {
+  color: var(--color-text);
+  font-size: 1.1rem;
 }
 
 /* === Reduced motion === */
