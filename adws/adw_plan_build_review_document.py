@@ -102,7 +102,7 @@ def main():
         issue_type_raw = classify_result.output.strip()
         issue_type = None
         for line in issue_type_raw.split('\n'):
-            line = line.strip()
+            line = line.strip().strip('`')
             if line in ['/feature', '/bug', '/chore', '0']:
                 issue_type = line
                 break
@@ -110,13 +110,13 @@ def main():
         if not issue_type:
             # Fallback: buscar cualquier línea que empiece con /
             for line in issue_type_raw.split('\n'):
-                line = line.strip()
+                line = line.strip().strip('`')
                 if line.startswith('/'):
                     issue_type = line
                     break
 
         if not issue_type:
-            issue_type = issue_type_raw
+            issue_type = issue_type_raw.strip().strip('`')
 
         logger.info(f"Issue classified as: {issue_type}")
 

@@ -36,6 +36,5 @@ NO incluyas:
 - Saltos de línea extras
 
 SOLO el comando, nada más. Ejemplo de salida correcta:
-```
+
 /bug
-```
