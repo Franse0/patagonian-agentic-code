@@ -43,6 +43,59 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2);
 
+  function showScreen(el) {
+    if (!el) return;
+    el.hidden = false;
+    el.classList.add('screen-transition', 'screen-entering');
+    requestAnimationFrame(function () {
+      requestAnimationFrame(function () {
+        el.classList.remove('screen-entering');
+        el.classList.add('screen-visible');
+      });
+    });
+  }
+
+  function hideScreen(el) {
+    if (!el || el.hidden) return;
+    el.classList.add('screen-transition');
+    el.classList.remove('screen-visible');
+    el.addEventListener('transitionend', function handler() {
+      el.removeEventListener('transitionend', handler);
+      el.hidden = true;
+      el.classList.remove('screen-transition', 'screen-entering');
+    }, { once: true });
+  }
+
+  function showSpinner() {
+    var spinner = document.getElementById('loading-spinner');
+    var form = document.getElementById('join-form');
+    var btn = document.getElementById('btn-create-room');
+    var nameGroup = document.querySelector('.player-name-group');
+    var divider = document.querySelector('.lobby-divider');
+    var desc = document.querySelector('.lobby-description');
+    if (spinner) spinner.hidden = false;
+    if (form) form.hidden = true;
+    if (btn) btn.hidden = true;
+    if (nameGroup) nameGroup.hidden = true;
+    if (divider) divider.hidden = true;
+    if (desc) desc.hidden = true;
+  }
+
+  function hideSpinner() {
+    var spinner = document.getElementById('loading-spinner');
+    var form = document.getElementById('join-form');
+    var btn = document.getElementById('btn-create-room');
+    var nameGroup = document.querySelector('.player-name-group');
+    var divider = document.querySelector('.lobby-divider');
+    var desc = document.querySelector('.lobby-description');
+    if (spinner) spinner.hidden = true;
+    if (form) form.hidden = false;
+    if (btn) btn.hidden = false;
+    if (nameGroup) nameGroup.hidden = false;
+    if (divider) divider.hidden = false;
+    if (desc) desc.hidden = false;
+  }
+
   function onReady() {
     fleetState = Placement.getFleetState();
 
@@ -50,7 +103,7 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     if (placementPhase) placementPhase.hidden = true;
 
     var status = document.getElementById('game-status');
-    if (status) status.textContent = 'Esperando que el oponente esté listo...';
+    if (status) status.textContent = 'Fase de colocación completa — esperando al oponente...';
 
     FirebaseGame.syncReadyState(window.Game.roomId, window.Game.playerKey, fleetState)
       .then(function () {
@@ -70,7 +123,7 @@ function checkVictoryCondition(myAttacks, opponentShips) {
 
   function handleBothReady() {
     var status = document.getElementById('game-status');
-    if (status) status.textContent = '¡La partida comenzó!';
+    if (status) status.textContent = '¡Combate iniciado! Preparate para atacar.';
     // Only player1 writes the initial game state to avoid race condition
     if (window.Game.playerKey === 'player1') {
       FirebaseGame.startGame(window.Game.roomId);
@@ -221,8 +274,8 @@ function checkVictoryCondition(myAttacks, opponentShips) {
   function handleGameFinished(winnerKey) {
     var gameContainer = document.getElementById('game-container');
     var endScreen = document.getElementById('end-screen');
-    if (gameContainer) gameContainer.hidden = true;
-    if (endScreen) endScreen.hidden = false;
+    hideScreen(gameContainer);
+    showScreen(endScreen);
 
     var isWinner = (winnerKey === window.Game.playerKey);
     var resultEl = document.getElementById('end-result');
@@ -280,8 +333,8 @@ function checkVictoryCondition(myAttacks, opponentShips) {
   function handleBothConnected() {
     var lobby = document.getElementById('lobby');
     var gameContainer = document.getElementById('game-container');
-    if (lobby) lobby.hidden = true;
-    if (gameContainer) gameContainer.hidden = false;
+    hideScreen(lobby);
+    showScreen(gameContainer);
   }
 
   function setLobbyStatus(message, isError) {
@@ -308,6 +361,42 @@ function checkVictoryCondition(myAttacks, opponentShips) {
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    // --- Player name ---
+    var playerNameInput = document.getElementById('input-player-name');
+    function getPlayerName() {
+      return (playerNameInput && playerNameInput.value.trim()) || 'Jugador 1';
+    }
+    window.Game.playerName = getPlayerName();
+    if (playerNameInput) {
+      playerNameInput.addEventListener('input', function () {
+        window.Game.playerName = getPlayerName();
+      });
+    }
+
+    // --- Rules modal ---
+    var btnRules = document.getElementById('btn-rules');
+    var rulesModal = document.getElementById('rules-modal');
+    var btnCloseRules = document.getElementById('btn-close-rules');
+    var rulesOverlay = document.querySelector('.rules-overlay');
+
+    function openRules() {
+      if (!rulesModal) return;
+      rulesModal.hidden = false;
+      btnCloseRules && btnCloseRules.focus();
+    }
+    function closeRules() {
+      if (!rulesModal) return;
+      rulesModal.hidden = true;
+      btnRules && btnRules.focus();
+    }
+
+    if (btnRules) btnRules.addEventListener('click', openRules);
+    if (btnCloseRules) btnCloseRules.addEventListener('click', closeRules);
+    if (rulesOverlay) rulesOverlay.addEventListener('click', closeRules);
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && rulesModal && !rulesModal.hidden) closeRules();
+    });
+
     // --- Placement init ---
     Placement.init({
       onAllPlaced: function (allPlaced) {
@@ -387,12 +476,15 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     var btnCreate = document.getElementById('btn-create-room');
     if (btnCreate) {
       btnCreate.addEventListener('click', async function () {
-        setLobbyFormEnabled(false);
-        setLobbyStatus('Creando sala...', false);
+        window.Game.playerName = getPlayerName();
+        showSpinner();
+        setLobbyStatus('', false);
         try {
           var result = await FirebaseGame.createRoom(playerId);
           window.Game.roomId = result.roomId;
           window.Game.playerKey = result.playerKey;
+
+          hideSpinner();
 
           var codeDisplay = document.getElementById('room-code-display');
           var codeValue = document.getElementById('room-code-value');
@@ -408,8 +500,8 @@ function checkVictoryCondition(myAttacks, opponentShips) {
             onStatusChange: function () {}
           });
         } catch (e) {
+          hideSpinner();
           setLobbyStatus('Error de conexión, intenta de nuevo', true);
-          setLobbyFormEnabled(true);
         }
       });
     }
@@ -423,16 +515,17 @@ function checkVictoryCondition(myAttacks, opponentShips) {
         var code = (input.value || '').trim().toUpperCase();
         if (!code) return;
 
-        setLobbyFormEnabled(false);
-        setLobbyStatus('Uniéndose...', false);
+        window.Game.playerName = getPlayerName();
+        showSpinner();
+        setLobbyStatus('', false);
         try {
           var result = await FirebaseGame.joinRoom(code, playerId);
           window.Game.roomId = result.roomId;
           window.Game.playerKey = result.playerKey;
           handleBothConnected();
         } catch (e) {
+          hideSpinner();
           setLobbyStatus(e.message, true);
-          setLobbyFormEnabled(true);
         }
       });
     }
@@ -455,5 +548,6 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     roomId: null,
     playerKey: null,
     playerId: playerId,
+    playerName: 'Jugador 1',
   };
 })();

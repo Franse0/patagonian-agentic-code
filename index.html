@@ -3,18 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Batalla Naval</title>
+  <title>Batalla Naval Patagonian</title>
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
   <header>
-    <h1>Batalla Naval</h1>
+    <h1>Batalla Naval Patagonian</h1>
+    <button id="btn-rules" type="button" class="btn-rules" aria-label="Ver reglas del juego">?</button>
     <div id="game-status" role="status" aria-live="polite">Colocá tus barcos para comenzar</div>
     <div id="turn-indicator" role="status" aria-live="polite" hidden></div>
   </header>
 
   <section id="lobby">
-    <h2 class="lobby-title">Batalla Naval Multijugador</h2>
+    <h2 class="lobby-title">Batalla Naval Patagonian</h2>
+    <p class="lobby-description">Hundir la flota enemiga antes de que hundan la tuya. Para dos jugadores en tiempo real.</p>
+    <div class="player-name-group">
+      <label for="input-player-name">Tu nombre</label>
+      <input id="input-player-name" type="text" maxlength="20" placeholder="Jugador 1" autocomplete="off">
+    </div>
     <button id="btn-create-room" type="button">Crear sala</button>
     <div class="lobby-divider">— o —</div>
     <form id="join-form">
@@ -27,6 +33,10 @@
       <p>Comparte este código con tu oponente</p>
     </div>
     <div id="lobby-status" aria-live="polite"></div>
+    <div id="loading-spinner" hidden aria-label="Conectando..." role="status">
+      <div class="spinner"></div>
+      <span class="spinner-text">Conectando...</span>
+    </div>
   </section>
 
   <main id="game-container" hidden>
@@ -120,6 +130,37 @@
       <button id="btn-exit">Salir</button>
     </div>
   </section>
+
+  <div id="rules-modal" hidden role="dialog" aria-modal="true" aria-labelledby="rules-title">
+    <div class="rules-overlay"></div>
+    <div class="rules-dialog">
+      <h2 id="rules-title">Reglas del Juego</h2>
+      <button id="btn-close-rules" type="button" aria-label="Cerrar reglas">&times;</button>
+      <section class="rules-section">
+        <h3>Objetivo</h3>
+        <p>Hundir toda la flota enemiga antes de que hundan la tuya. Los jugadores se turnan para atacar celdas del tablero oponente.</p>
+      </section>
+      <section class="rules-section">
+        <h3>Fases</h3>
+        <ol>
+          <li><strong>Lobby:</strong> Crear o unirse a una sala con el código de 6 caracteres.</li>
+          <li><strong>Colocación:</strong> Colocá tus 5 barcos en el tablero. Podés elegir orientación o usar "Aleatorio".</li>
+          <li><strong>Combate:</strong> Por turnos, hacé clic en una celda del tablero enemigo para atacar.</li>
+          <li><strong>Fin:</strong> Quien hunda toda la flota enemiga primero, gana.</li>
+        </ol>
+      </section>
+      <section class="rules-section">
+        <h3>Barcos</h3>
+        <ul class="rules-ships">
+          <li><span class="rules-ship-name">Portaaviones</span><span class="rules-ship-size">5 celdas</span></li>
+          <li><span class="rules-ship-name">Acorazado</span><span class="rules-ship-size">4 celdas</span></li>
+          <li><span class="rules-ship-name">Crucero</span><span class="rules-ship-size">3 celdas</span></li>
+          <li><span class="rules-ship-name">Submarino</span><span class="rules-ship-size">3 celdas</span></li>
+          <li><span class="rules-ship-name">Destructor</span><span class="rules-ship-size">2 celdas</span></li>
+        </ul>
+      </section>
+    </div>
+  </div>
 
   <script type="module" src="js/placement.js"></script>
   <script type="module" src="js/firebase-game.js"></script>
