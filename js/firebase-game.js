@@ -37,7 +37,7 @@ async function joinRoom(roomId, playerId) {
   if (data.status !== 'waiting') {
     throw new Error('La sala no está disponible');
   }
-  if (data.player2 !== null) {
+  if (data.player2 && data.player2.id) {
     throw new Error('La sala ya está completa');
   }
   await update(ref(db, `rooms/${roomId}`), {
