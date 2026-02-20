@@ -2,6 +2,15 @@
 
 import { FirebaseGame } from './firebase-game.js';
 
+function checkVictoryCondition(myAttacks, opponentShips) {
+  var hitCells = new Set(
+    myAttacks.filter(function (a) { return a.result === 'hit'; }).map(function (a) { return a.cell; })
+  );
+  return Object.values(opponentShips).every(function (cells) {
+    return cells.every(function (cell) { return hitCells.has(cell); });
+  });
+}
+
 (function () {
   'use strict';
 
@@ -27,7 +36,8 @@ import { FirebaseGame } from './firebase-game.js';
           onStatusChange: function () {},
           onBothReady: handleBothReady,
           onTurnChange: handleTurnChange,
-          onAttacksChange: handleAttacksChange
+          onAttacksChange: handleAttacksChange,
+          onGameFinished: function (winnerKey) { handleGameFinished(winnerKey); }
         });
       })
       .catch(function () {
@@ -125,6 +135,61 @@ import { FirebaseGame } from './firebase-game.js';
     }
   }
 
+  function handleGameFinished(winnerKey) {
+    var gameContainer = document.getElementById('game-container');
+    var endScreen = document.getElementById('end-screen');
+    if (gameContainer) gameContainer.hidden = true;
+    if (endScreen) endScreen.hidden = false;
+
+    var isWinner = (winnerKey === window.Game.playerKey);
+    var resultEl = document.getElementById('end-result');
+    if (resultEl) {
+      resultEl.textContent = isWinner ? '¡Ganaste! 🏆' : 'Perdiste... 💀';
+      resultEl.className = isWinner ? '--win' : '--lose';
+    }
+
+    // Calculate stats from room data
+    var roomData = FirebaseGame.getRoomData();
+    var attacks = roomData && roomData.attacks ? Object.values(roomData.attacks) : [];
+    var myAttacks = attacks.filter(function (a) { return a.playerId === window.Game.playerKey; });
+    var totalAttacks = myAttacks.length;
+    var hits = myAttacks.filter(function (a) { return a.result === 'hit'; }).length;
+    var accuracy = totalAttacks > 0 ? (hits / totalAttacks * 100).toFixed(1) : '0.0';
+
+    // Duration from first to last attack (any player)
+    var timestamps = attacks.map(function (a) { return a.timestamp || 0; }).filter(function (t) { return t > 0; });
+    var durationSec = 0;
+    if (timestamps.length >= 2) {
+      var first = Math.min.apply(null, timestamps);
+      var last = Math.max.apply(null, timestamps);
+      durationSec = Math.floor((last - first) / 1000);
+    }
+    var minutes = Math.floor(durationSec / 60);
+    var seconds = durationSec % 60;
+    var durationStr = minutes + 'm ' + seconds + 's';
+
+    var statAttacks = document.getElementById('stat-attacks');
+    var statAccuracy = document.getElementById('stat-accuracy');
+    var statDuration = document.getElementById('stat-duration');
+    if (statAttacks) statAttacks.innerHTML = '<strong>Ataques</strong>' + totalAttacks;
+    if (statAccuracy) statAccuracy.innerHTML = '<strong>Precisión</strong>' + accuracy + '%';
+    if (statDuration) statDuration.innerHTML = '<strong>Duración</strong>' + durationStr;
+
+    // Buttons
+    var btnRematch = document.getElementById('btn-rematch');
+    var btnExit = document.getElementById('btn-exit');
+    if (btnRematch) {
+      btnRematch.addEventListener('click', function () {
+        window.location.reload();
+      });
+    }
+    if (btnExit) {
+      btnExit.addEventListener('click', function () {
+        window.location.reload();
+      });
+    }
+  }
+
   function getFleetState() {
     return fleetState;
   }
@@ -209,9 +274,26 @@ import { FirebaseGame } from './firebase-game.js';
         _isMyTurn = false;
         enemyBoard.classList.add('board--disabled');
 
-        // Write attack to Firebase and alternate turn
+        // Write attack to Firebase, then check victory or alternate turn
         FirebaseGame.registerAttack(window.Game.roomId, window.Game.playerKey, rawId, result)
           .then(function () {
+            if (result === 'hit' && opponentShips) {
+              // Build full list of my attacks from roomData + current attack
+              var roomDataNow = FirebaseGame.getRoomData();
+              var allAttacks = roomDataNow && roomDataNow.attacks ? Object.values(roomDataNow.attacks) : [];
+              var myAttacks = allAttacks.filter(function (a) { return a.playerId === window.Game.playerKey; });
+              // Normalize opponent ship cells: remove 'cell-' prefix for comparison
+              var normalizedShips = {};
+              Object.keys(opponentShips).forEach(function (key) {
+                normalizedShips[key] = opponentShips[key].map(function (c) {
+                  return c.replace('cell-', '');
+                });
+              });
+              if (checkVictoryCondition(myAttacks, normalizedShips)) {
+                FirebaseGame.setWinner(window.Game.roomId, window.Game.playerKey);
+                return;
+              }
+            }
             var nextTurn = window.Game.playerKey === 'player1' ? 'player2' : 'player1';
             FirebaseGame.setTurn(window.Game.roomId, nextTurn);
           });

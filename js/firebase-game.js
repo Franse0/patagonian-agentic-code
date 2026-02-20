@@ -7,6 +7,7 @@ let _unsubscribe = null;
 let _lastTurn = null;
 let _lastAttacksLen = -1;
 let _roomData = null;
+let _gameFinished = false;
 
 function generateRoomId() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -54,6 +55,7 @@ function listenRoom(roomId, callbacks) {
   _lastTurn = null;
   _lastAttacksLen = -1;
   _roomData = null;
+  _gameFinished = false;
   const roomRef = ref(db, `rooms/${roomId}`);
   _unsubscribe = onValue(roomRef, (snapshot) => {
     const data = snapshot.val();
@@ -79,6 +81,11 @@ function listenRoom(roomId, callbacks) {
     if (attacksArr.length !== _lastAttacksLen) {
       _lastAttacksLen = attacksArr.length;
       if (callbacks.onAttacksChange) callbacks.onAttacksChange(attacksArr);
+    }
+    // onGameFinished — only once when status becomes 'finished'
+    if (data.status === 'finished' && data.winner && !_gameFinished) {
+      _gameFinished = true;
+      if (callbacks.onGameFinished) callbacks.onGameFinished(data.winner);
     }
   });
 }
@@ -107,6 +114,11 @@ async function registerAttack(roomId, playerKey, cellId, result) {
   });
 }
 
+async function setWinner(roomId, winnerKey) {
+  const roomRef = ref(db, `rooms/${roomId}`);
+  await update(roomRef, { winner: winnerKey, status: 'finished' });
+}
+
 async function setTurn(roomId, nextTurn) {
   await update(ref(db), { [`rooms/${roomId}/currentTurn`]: nextTurn });
 }
@@ -122,4 +134,4 @@ function destroy() {
   }
 }
 
-export const FirebaseGame = { createRoom, joinRoom, listenRoom, destroy, syncReadyState, registerAttack, startGame, setTurn, getRoomData };
+export const FirebaseGame = { createRoom, joinRoom, listenRoom, destroy, syncReadyState, registerAttack, startGame, setTurn, setWinner, getRoomData };
