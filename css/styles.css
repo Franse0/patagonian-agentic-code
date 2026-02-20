@@ -57,6 +57,157 @@ header h1 {
   color: var(--color-primary);
 }
 
+/* === Lobby === */
+#lobby {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 60vh;
+  gap: 1.5rem;
+}
+
+.lobby-title {
+  color: var(--color-heading);
+  font-size: 1.5rem;
+  letter-spacing: 0.05em;
+}
+
+.lobby-divider {
+  color: var(--color-border);
+  font-size: 0.95rem;
+  user-select: none;
+}
+
+#btn-create-room {
+  padding: 0.7rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  background: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+#btn-create-room:hover:not(:disabled) {
+  background: #1a6fbf;
+  border-color: #1a6fbf;
+}
+
+#btn-create-room:disabled {
+  background: var(--color-btn-disabled);
+  color: var(--color-btn-text-disabled);
+  border-color: var(--color-btn-disabled);
+  cursor: not-allowed;
+}
+
+#join-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+#input-room-code {
+  font-family: monospace;
+  font-size: 1.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  width: 8ch;
+  padding: 0.45rem 0.6rem;
+  text-align: center;
+  color: var(--color-heading);
+  background: var(--color-surface);
+  border: 2px solid var(--color-border);
+  border-radius: 5px;
+  outline: none;
+  transition: border-color 0.15s ease;
+}
+
+#input-room-code:focus {
+  border-color: var(--color-primary);
+}
+
+#input-room-code:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+#join-form button[type="submit"] {
+  padding: 0.55rem 1.2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  background: var(--color-btn-bg);
+  border: 2px solid var(--color-border);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+#join-form button[type="submit"]:hover:not(:disabled) {
+  background: var(--color-btn-hover);
+  border-color: var(--color-btn-hover);
+}
+
+#join-form button[type="submit"]:disabled {
+  background: var(--color-btn-disabled);
+  color: var(--color-btn-text-disabled);
+  border-color: var(--color-btn-disabled);
+  cursor: not-allowed;
+}
+
+#room-code-display {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+#room-code-value {
+  font-family: monospace;
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 0.25em;
+  color: var(--color-heading);
+}
+
+#btn-copy-code {
+  padding: 0.35rem 1rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  background: var(--color-btn-bg);
+  border: 2px solid var(--color-border);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+#btn-copy-code:hover {
+  background: var(--color-btn-hover);
+  border-color: var(--color-btn-hover);
+}
+
+#room-code-display p {
+  font-size: 0.9rem;
+  color: var(--color-text);
+  opacity: 0.75;
+}
+
+#lobby-status {
+  font-size: 0.95rem;
+  color: var(--color-text);
+  opacity: 0.85;
+  min-height: 1.4em;
+}
+
+.lobby-status--error {
+  color: #e74c3c !important;
+  opacity: 1 !important;
+}
+
 /* === Game container === */
 #game-container {
   display: flex;

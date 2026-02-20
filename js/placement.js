@@ -1,6 +1,6 @@
 /* placement.js — Ship placement module for Batalla Naval */
 
-const Placement = (function () {
+window.Placement = (function () {
   'use strict';
 
   // --- Ship definitions ---
