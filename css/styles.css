@@ -16,6 +16,10 @@
   --color-btn-hover: #2e86de;
   --color-btn-disabled: #162d4a;
   --color-btn-text-disabled: #4a6a8a;
+  --color-hit: #e74c3c;
+  --color-miss: #5d6d7e;
+  --color-hit-received: rgba(231, 76, 60, 0.6);
+  --color-miss-received: rgba(93, 109, 126, 0.45);
   --board-size: 11; /* 1 label col/row + 10 cells */
   --cell-size: 38px;
 }
@@ -410,11 +414,36 @@ header h1 {
   width: 44px;
 }
 
+/* === Turn indicator === */
+#turn-indicator {
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: var(--color-text);
+  transition: color 0.2s;
+}
+#turn-indicator.turn-indicator--active {
+  color: var(--color-primary);
+}
+
+/* === Combat cell states — enemy board (attacker's view) === */
+.cell--attacked--hit  { background: var(--color-hit);  cursor: default; }
+.cell--attacked--miss { background: var(--color-miss); cursor: default; }
+
+/* === Combat cell states — player board (defender's view) === */
+.cell--hit-received  { background: var(--color-hit-received);  }
+.cell--miss-received { background: var(--color-miss-received); }
+
+/* Enemy board disabled during opponent's turn */
+#enemy-board.board--disabled { pointer-events: none; opacity: 0.6; }
+
 /* === Reduced motion === */
 @media (prefers-reduced-motion: reduce) {
   .cell,
   .ship-item,
-  .placement-controls button {
+  .placement-controls button,
+  #turn-indicator {
     transition: none;
   }
 }

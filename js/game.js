@@ -6,6 +6,7 @@ import { FirebaseGame } from './firebase-game.js';
   'use strict';
 
   var fleetState = null;
+  var _isMyTurn = false;
   var playerId = (typeof crypto !== 'undefined' && crypto.randomUUID)
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2);
@@ -17,7 +18,70 @@ import { FirebaseGame } from './firebase-game.js';
     if (placementPhase) placementPhase.hidden = true;
 
     var status = document.getElementById('game-status');
-    if (status) status.textContent = 'Barcos colocados. Esperando oponente...';
+    if (status) status.textContent = 'Esperando que el oponente esté listo...';
+
+    FirebaseGame.syncReadyState(window.Game.roomId, window.Game.playerKey, fleetState)
+      .then(function () {
+        FirebaseGame.listenRoom(window.Game.roomId, {
+          onPlayerJoined: function () {},
+          onStatusChange: function () {},
+          onBothReady: handleBothReady,
+          onTurnChange: handleTurnChange,
+          onAttacksChange: handleAttacksChange
+        });
+      })
+      .catch(function () {
+        if (status) status.textContent = 'Error al conectar con Firebase. Jugando en local.';
+      });
+  }
+
+  function handleBothReady() {
+    var status = document.getElementById('game-status');
+    if (status) status.textContent = '¡La partida comenzó!';
+    // Only player1 writes the initial game state to avoid race condition
+    if (window.Game.playerKey === 'player1') {
+      FirebaseGame.startGame(window.Game.roomId);
+    }
+  }
+
+  function handleTurnChange(currentTurn) {
+    _isMyTurn = (currentTurn === window.Game.playerKey);
+    var indicator = document.getElementById('turn-indicator');
+    if (indicator) {
+      indicator.hidden = false;
+      indicator.textContent = _isMyTurn ? 'Tu turno' : 'Turno del oponente';
+      if (_isMyTurn) {
+        indicator.classList.add('turn-indicator--active');
+      } else {
+        indicator.classList.remove('turn-indicator--active');
+      }
+    }
+    var enemyBoard = document.getElementById('enemy-board');
+    if (enemyBoard) {
+      if (_isMyTurn) {
+        enemyBoard.classList.remove('board--disabled');
+      } else {
+        enemyBoard.classList.add('board--disabled');
+      }
+    }
+    var status = document.getElementById('game-status');
+    if (status) status.textContent = _isMyTurn ? 'Atacá el tablero enemigo' : 'Esperando ataque del oponente...';
+  }
+
+  function handleAttacksChange(attacks) {
+    var opponentKey = window.Game.playerKey === 'player1' ? 'player2' : 'player1';
+    var opponentAttacks = attacks.filter(function (a) { return a.playerId === opponentKey; });
+    opponentAttacks.forEach(function (attack) {
+      var cellId = 'cell-' + attack.cell;
+      var el = document.getElementById(cellId);
+      if (!el) return;
+      if (el.classList.contains('cell--hit-received') || el.classList.contains('cell--miss-received')) return;
+      if (attack.result === 'hit') {
+        el.classList.add('cell--hit-received');
+      } else {
+        el.classList.add('cell--miss-received');
+      }
+    });
   }
 
   function getFleetState() {
@@ -70,6 +134,47 @@ import { FirebaseGame } from './firebase-game.js';
     var btnReady = document.getElementById('btn-ready');
     if (btnReady) {
       btnReady.addEventListener('click', onReady);
+    }
+
+    // --- Combat: Enemy board clicks ---
+    var enemyBoard = document.getElementById('enemy-board');
+    if (enemyBoard) {
+      enemyBoard.addEventListener('click', function (e) {
+        if (!_isMyTurn) return;
+        var cell = e.target.closest('.cell');
+        if (!cell) return;
+        // Ignore already attacked cells
+        if (cell.classList.contains('cell--attacked--hit') || cell.classList.contains('cell--attacked--miss')) return;
+
+        // Extract cellId: 'enemy-cell-A1' → 'A1'
+        var rawId = cell.id.replace('enemy-cell-', '');
+
+        // Determine hit/miss by checking opponent's ships
+        var roomData = FirebaseGame.getRoomData();
+        var opponentKey = window.Game.playerKey === 'player1' ? 'player2' : 'player1';
+        var opponentShips = roomData && roomData[opponentKey] && roomData[opponentKey].ships;
+        var isHit = false;
+        if (opponentShips) {
+          Object.values(opponentShips).forEach(function (cellList) {
+            if (cellList && cellList.indexOf('cell-' + rawId) !== -1) isHit = true;
+          });
+        }
+        var result = isHit ? 'hit' : 'miss';
+
+        // Immediate local feedback
+        cell.classList.add(isHit ? 'cell--attacked--hit' : 'cell--attacked--miss');
+
+        // Disable turn locally until Firebase confirms the change
+        _isMyTurn = false;
+        enemyBoard.classList.add('board--disabled');
+
+        // Write attack to Firebase and alternate turn
+        FirebaseGame.registerAttack(window.Game.roomId, window.Game.playerKey, rawId, result)
+          .then(function () {
+            var nextTurn = window.Game.playerKey === 'player1' ? 'player2' : 'player1';
+            FirebaseGame.setTurn(window.Game.roomId, nextTurn);
+          });
+      });
     }
 
     // --- Lobby: Create room ---
