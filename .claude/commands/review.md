@@ -39,10 +39,13 @@ Revisa el trabajo realizado contra un archivo de especificación (specs/*.md) pa
     - `skippable` - no bloqueante, puede lanzarse pero sigue siendo un problema
     - `tech_debt` - no bloqueante, crea deuda técnica para el futuro
     - `blocker` - debe abordarse inmediatamente, daña la UX o no funcionará según lo esperado
-- **IMPORTANTE**: Devuelve SOLO el objeto JSON con los resultados de la revisión
-  - Genera el resultado en formato JSON basado en la sección `Report` a continuación
-  - No incluyas ningún texto adicional, explicaciones o formato markdown
-  - Ejecutaremos JSON.parse() inmediatamente en la salida, así que asegúrate de que sea JSON válido
+- **CRÍTICO - FORMATO DE SALIDA**: Tu ÚNICA respuesta final debe ser el objeto JSON puro
+  - NADA antes del `{` de apertura
+  - NADA después del `}` de cierre
+  - Sin texto introductorio, sin resumen, sin markdown, sin bloques de código, sin triple backtick
+  - Si escribís CUALQUIER cosa que no sea el JSON, el sistema falla completamente
+  - Ejemplo de lo que NO debes hacer: "## Review Results..." o "```json..."
+  - Ejemplo correcto: empieza directamente con `{` y termina con `}`
 - Piensa cuidadosamente mientras trabajas en la revisión. Enfócate en la funcionalidad crítica y la experiencia del usuario.
 
 ## How to Open Website
