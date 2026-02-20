@@ -407,6 +407,17 @@ function checkVictoryCondition(myAttacks, opponentShips) {
   }
 
   document.addEventListener('DOMContentLoaded', function () {
+    // --- Home screen → Lobby navigation ---
+    var homeScreen = document.getElementById('home-screen');
+    var lobbyScreen = document.getElementById('lobby');
+    var btnPlay = document.getElementById('btn-play');
+    if (btnPlay) {
+      btnPlay.addEventListener('click', function () {
+        hideScreen(homeScreen);
+        showScreen(lobbyScreen);
+      });
+    }
+
     // --- Player name ---
     var playerNameInput = document.getElementById('input-player-name');
     function getPlayerName() {

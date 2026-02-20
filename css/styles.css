@@ -46,16 +46,52 @@ body {
   align-items: center;
 }
 
+/* === Home screen === */
+#home-screen {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  gap: 1.5rem;
+  padding: 2rem 1rem;
+}
+
+#home-screen h1 {
+  color: var(--color-heading);
+  font-size: 2.5rem;
+  letter-spacing: 0.06em;
+  text-align: center;
+}
+
+.home-description {
+  color: var(--color-text);
+  font-size: 1.05rem;
+  text-align: center;
+  line-height: 1.6;
+}
+
+#btn-play {
+  padding: 0.85rem 3rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--color-heading);
+  background: var(--color-primary);
+  border: 2px solid var(--color-primary);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+#btn-play:hover {
+  background: #1a6fbf;
+  border-color: #1a6fbf;
+}
+
 /* === Header === */
 header {
   text-align: center;
-  padding: 1.25rem 1rem 0.75rem;
-}
-
-header h1 {
-  color: var(--color-heading);
-  font-size: 1.75rem;
-  letter-spacing: 0.05em;
+  padding: 0.5rem 1rem;
 }
 
 #game-status {
@@ -72,12 +108,6 @@ header h1 {
   justify-content: center;
   min-height: 60vh;
   gap: 1.5rem;
-}
-
-.lobby-title {
-  color: var(--color-heading);
-  font-size: 1.5rem;
-  letter-spacing: 0.05em;
 }
 
 .lobby-divider {
@@ -203,14 +233,6 @@ header h1 {
   opacity: 0.75;
 }
 
-.lobby-description {
-  font-size: 0.95rem;
-  color: var(--color-text);
-  opacity: 0.8;
-  text-align: center;
-  max-width: 380px;
-  line-height: 1.5;
-}
 .player-name-group {
   display: flex;
   flex-direction: column;
@@ -725,9 +747,6 @@ header h1 {
 }
 
 /* === Rules button === */
-header {
-  position: relative;
-}
 .btn-rules {
   position: absolute;
   top: 1rem;
@@ -963,8 +982,8 @@ header {
     --cell-size: 30px;
   }
 
-  header h1 {
-    font-size: 1.35rem;
+  #home-screen h1 {
+    font-size: 1.75rem;
   }
 
   .ship-name {
