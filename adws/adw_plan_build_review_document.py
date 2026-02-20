@@ -30,6 +30,7 @@ Ejemplo:
 import sys
 import os
 import json
+import re
 import subprocess
 from pathlib import Path
 from dotenv import load_dotenv
@@ -258,23 +259,34 @@ def main():
 
         if review_success:
             try:
-                # Intentar parsear salida JSON
+                # Intentar parsear salida JSON directamente
                 review_data = json.loads(review_result.output)
+            except json.JSONDecodeError:
+                # Fallback: extraer JSON del contenido mixto buscando el bloque { ... }
+                logger.warning("Direct JSON parse failed, attempting to extract JSON from output")
+                try:
+                    match = re.search(r'\{.*\}', review_result.output, re.DOTALL)
+                    if match:
+                        review_data = json.loads(match.group())
+                        logger.info("Successfully extracted JSON from mixed output")
+                    else:
+                        logger.warning("Could not find JSON block in review output")
+                        review_data = None
+                except json.JSONDecodeError:
+                    logger.warning("Could not parse review output as JSON")
+                    review_data = None
+
+            if review_data:
                 logger.info(f"Review completed: {'SUCCESS' if review_data.get('success') else 'FAILED'}")
                 logger.info(f"Review summary: {review_data.get('review_summary', 'N/A')}")
 
-                # Registrar issues si los hay
                 if review_data.get('review_issues'):
                     logger.info(f"Review found {len(review_data['review_issues'])} issues")
                     for issue_item in review_data['review_issues']:
                         logger.info(f"  - [{issue_item['issue_severity']}] {issue_item['issue_description']}")
 
-                # Registrar screenshots
                 if review_data.get('screenshots'):
                     logger.info(f"Review captured {len(review_data['screenshots'])} screenshots")
-            except json.JSONDecodeError:
-                logger.warning("Could not parse review output as JSON")
-                review_data = None
 
         if review_data:
             review_comment_parts = [
