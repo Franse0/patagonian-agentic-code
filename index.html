@@ -8,15 +8,18 @@
 </head>
 <body>
   <header>
-    <h1>Batalla Naval Patagonian</h1>
-    <button id="btn-rules" type="button" class="btn-rules" aria-label="Ver reglas del juego">?</button>
     <div id="game-status" role="status" aria-live="polite">Colocá tus barcos para comenzar</div>
     <div id="turn-indicator" role="status" aria-live="polite" hidden></div>
   </header>
 
-  <section id="lobby">
-    <h2 class="lobby-title">Batalla Naval Patagonian</h2>
-    <p class="lobby-description">Hundir la flota enemiga antes de que hundan la tuya. Para dos jugadores en tiempo real.</p>
+  <section id="home-screen">
+    <button id="btn-rules" type="button" class="btn-rules" aria-label="Ver reglas del juego">?</button>
+    <h1>Batalla Naval Patagonian</h1>
+    <p class="home-description">Hundir la flota enemiga antes de que hundan la tuya.<br>Para dos jugadores en tiempo real.</p>
+    <button id="btn-play" type="button">Jugar</button>
+  </section>
+
+  <section id="lobby" hidden>
     <div class="player-name-group">
       <label for="input-player-name">Tu nombre</label>
       <input id="input-player-name" type="text" maxlength="20" placeholder="Jugador 1" autocomplete="off">
