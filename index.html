@@ -12,7 +12,23 @@
     <div id="game-status" role="status" aria-live="polite">Colocá tus barcos para comenzar</div>
   </header>
 
-  <main id="game-container">
+  <section id="lobby">
+    <h2 class="lobby-title">Batalla Naval Multijugador</h2>
+    <button id="btn-create-room" type="button">Crear sala</button>
+    <div class="lobby-divider">— o —</div>
+    <form id="join-form">
+      <input id="input-room-code" type="text" maxlength="6" placeholder="Código de sala" autocomplete="off">
+      <button type="submit">Unirse</button>
+    </form>
+    <div id="room-code-display" hidden>
+      <span id="room-code-value"></span>
+      <button id="btn-copy-code" type="button" aria-label="Copiar código">Copiar</button>
+      <p>Comparte este código con tu oponente</p>
+    </div>
+    <div id="lobby-status" aria-live="polite"></div>
+  </section>
+
+  <main id="game-container" hidden>
     <!-- Columna del jugador local -->
     <section class="board-column" id="player-column">
       <h2>Tu tablero</h2>
@@ -75,7 +91,8 @@
     </section>
   </main>
 
-  <script src="js/placement.js"></script>
-  <script src="js/game.js"></script>
+  <script type="module" src="js/placement.js"></script>
+  <script type="module" src="js/firebase-game.js"></script>
+  <script type="module" src="js/game.js"></script>
 </body>
 </html>
