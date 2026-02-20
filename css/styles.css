@@ -492,6 +492,101 @@ header h1 {
 /* Enemy board disabled during opponent's turn */
 #enemy-board.board--disabled { pointer-events: none; opacity: 0.6; }
 
+/* === End screen (victory/defeat overlay) === */
+#end-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2rem;
+  background: rgba(10, 22, 40, 0.92);
+  z-index: 100;
+}
+
+#end-result {
+  font-size: 2.5rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+
+#end-result.--win {
+  color: #f1c40f;
+}
+
+#end-result.--lose {
+  color: var(--color-hit);
+}
+
+#end-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  text-align: center;
+}
+
+#end-stats span {
+  font-family: monospace;
+  font-size: 0.95rem;
+  color: var(--color-text);
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+#end-buttons {
+  display: flex;
+  gap: 1rem;
+}
+
+#btn-rematch,
+#btn-exit {
+  padding: 0.7rem 2rem;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  border: 2px solid var(--color-border);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+#btn-rematch {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+#btn-rematch:hover {
+  background: #1a6fbf;
+  border-color: #1a6fbf;
+}
+
+#btn-exit {
+  background: var(--color-btn-bg);
+}
+
+#btn-exit:hover {
+  background: var(--color-btn-hover);
+  border-color: var(--color-btn-hover);
+}
+
+@media (max-width: 600px) {
+  #end-result {
+    font-size: 1.8rem;
+  }
+
+  #end-stats {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  #end-buttons {
+    flex-direction: column;
+  }
+}
+
 /* === Reduced motion === */
 @media (prefers-reduced-motion: reduce) {
   .cell,
