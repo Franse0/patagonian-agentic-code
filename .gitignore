@@ -95,5 +95,4 @@ SETUP_SUMMARY.md
 BUILD_WITH_AGENTIC_CODE.md
 issues.md
 
-# Firebase credentials (nunca commitear)
-js/firebase-config.js
+# Firebase: las keys web son públicas por diseño, firebase-config.js se commitea
