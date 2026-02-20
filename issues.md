@@ -286,3 +286,39 @@ del juego: hits, misses, hundimiento de barcos y victoria.
 - Las animaciones no deben bloquear la interacción del usuario
 - Respetar `prefers-reduced-motion` para accesibilidad
 ```
+
+---
+
+## Issue 10 — Panel de Estado de Flota
+
+**Título:** `feat: panel de estado de flota durante el combate`
+
+**Cuerpo:**
+```
+Mostrar en tiempo real el estado de los barcos de ambos jugadores durante el combate.
+
+## Descripción
+Durante la fase de combate, cada jugador debe poder ver qué barcos suyos
+siguen a flote y cuáles fueron hundidos por el oponente, y también qué
+barcos del enemigo ya hundió. El panel se actualiza automáticamente con
+cada ataque.
+
+## Criterios de Aceptación
+- Panel "Tu Flota" debajo del tablero propio con los 5 barcos listados
+- Panel "Flota Enemiga" debajo del tablero enemigo con los 5 barcos listados
+- Estado visual de cada barco:
+  - 🟢 Verde / ícono intacto → barco a flote
+  - 🔴 Rojo / tachado → barco hundido
+- El panel "Tu Flota" se actualiza cuando el enemigo hunde uno de tus barcos
+- El panel "Flota Enemiga" se actualiza cuando vos hundís un barco enemigo
+- Al hundir un barco enemigo, mostrar mensaje: "¡Hundiste el [nombre del barco]!"
+- Los paneles solo son visibles durante la fase de combate (no en lobby ni colocación)
+- Nombre de cada barco mostrado: Portaaviones, Acorazado, Crucero, Submarino, Destructor
+
+## Notas Técnicas
+- Leer el estado de barcos hundidos desde los ataques registrados en Firebase
+- Función `getSunkShips(attacks, ships)` que retorna array de shipIds hundidos
+- Actualizar los paneles desde el listener `onAttacksChange` en `firebase-game.js`
+- Los paneles deben ser capturables por el reviewer simulando via JS:
+  `driver.execute_script("document.getElementById('fleet-status').hidden = false")`
+```

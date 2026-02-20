@@ -288,6 +288,66 @@ header h1 {
   opacity: 0.7;
 }
 
+/* === Fleet status panels === */
+#fleet-status {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.fleet-panel {
+  flex: 1;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 4px;
+  padding: 0.5rem 0.75rem;
+}
+
+.fleet-panel h3 {
+  font-size: 0.82rem;
+  color: var(--color-text);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.4rem 0;
+}
+
+.fleet-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.fleet-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.82rem;
+  color: var(--color-text);
+  padding: 0.15rem 0;
+}
+
+.fleet-item::before {
+  content: '●';
+  color: #2ecc71;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+
+.fleet-item--sunk {
+  color: var(--color-hit);
+  text-decoration: line-through;
+  opacity: 0.7;
+}
+
+.fleet-item--sunk::before {
+  color: var(--color-hit);
+}
+
 /* === Board === */
 .board-wrapper {
   background: var(--color-surface);
@@ -613,6 +673,9 @@ header h1 {
   #attack-history-list {
     flex-direction: row;
     flex-wrap: wrap;
+  }
+  #fleet-status {
+    flex-direction: column;
   }
 }
 
