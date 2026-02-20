@@ -57,6 +57,10 @@ function checkVictoryCondition(myAttacks, opponentShips) {
 
   function hideScreen(el) {
     if (!el || el.hidden) return;
+    if (!el.classList.contains('screen-visible')) {
+      el.hidden = true;
+      return;
+    }
     el.classList.add('screen-transition');
     el.classList.remove('screen-visible');
     el.addEventListener('transitionend', function handler() {
