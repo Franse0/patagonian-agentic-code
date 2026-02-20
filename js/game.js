@@ -2,6 +2,20 @@
 
 import { FirebaseGame } from './firebase-game.js';
 
+function getSunkShips(attacks, ships) {
+  // attacks: [{cell, playerId, result}] — cell sin prefijo 'cell-'
+  // ships: {shipId: ['cell-A1', ...]} — cellIds CON prefijo 'cell-'
+  var hitCells = new Set(
+    attacks.filter(function (a) { return a.result === 'hit'; }).map(function (a) { return a.cell; })
+  );
+  return Object.keys(ships).filter(function (shipId) {
+    var cells = ships[shipId] || [];
+    return cells.length > 0 && cells.every(function (c) {
+      return hitCells.has(c.replace('cell-', ''));
+    });
+  });
+}
+
 function checkVictoryCondition(myAttacks, opponentShips) {
   var hitCells = new Set(
     myAttacks.filter(function (a) { return a.result === 'hit'; }).map(function (a) { return a.cell; })
@@ -14,8 +28,17 @@ function checkVictoryCondition(myAttacks, opponentShips) {
 (function () {
   'use strict';
 
+  var SHIPS = [
+    { id: 'carrier',    name: 'Portaaviones' },
+    { id: 'battleship', name: 'Acorazado' },
+    { id: 'cruiser',    name: 'Crucero' },
+    { id: 'submarine',  name: 'Submarino' },
+    { id: 'destroyer',  name: 'Destructor' }
+  ];
+
   var fleetState = null;
   var _isMyTurn = false;
+  var _prevEnemySunkIds = [];
   var playerId = (typeof crypto !== 'undefined' && crypto.randomUUID)
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2);
@@ -54,7 +77,65 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     }
   }
 
+  function renderFleetPanel(panelId, sunkIds) {
+    var list = document.querySelector('#' + panelId + ' .fleet-list');
+    if (!list) return;
+    list.innerHTML = '';
+    SHIPS.forEach(function (ship) {
+      var li = document.createElement('li');
+      var isSunk = sunkIds.indexOf(ship.id) !== -1;
+      li.className = 'fleet-item' + (isSunk ? ' fleet-item--sunk' : '');
+      li.textContent = ship.name;
+      list.appendChild(li);
+    });
+  }
+
+  function updateFleetPanels(attacks) {
+    var myKey = window.Game.playerKey;
+    var opponentKey = myKey === 'player1' ? 'player2' : 'player1';
+    var roomData = FirebaseGame.getRoomData();
+    if (!roomData) return;
+
+    // Tu flota: ataques recibidos del oponente sobre tus barcos
+    var opponentAttacks = attacks.filter(function (a) { return a.playerId === opponentKey; });
+    var myShips = roomData[myKey] && roomData[myKey].ships;
+    if (myShips) {
+      var mySunk = getSunkShips(opponentAttacks, myShips);
+      renderFleetPanel('player-fleet', mySunk);
+    }
+
+    // Flota enemiga: tus ataques sobre los barcos del oponente
+    var myAttacks = attacks.filter(function (a) { return a.playerId === myKey; });
+    var enemyShips = roomData[opponentKey] && roomData[opponentKey].ships;
+    if (enemyShips) {
+      var enemySunk = getSunkShips(myAttacks, enemyShips);
+      renderFleetPanel('enemy-fleet', enemySunk);
+
+      // Notificación cuando se hunde un nuevo barco enemigo
+      var newlySunk = enemySunk.filter(function (id) {
+        return _prevEnemySunkIds.indexOf(id) === -1;
+      });
+      if (newlySunk.length > 0) {
+        var sunkShip = SHIPS.filter(function (s) {
+          return newlySunk.indexOf(s.id) !== -1;
+        })[0];
+        if (sunkShip) {
+          var status = document.getElementById('game-status');
+          if (status) status.textContent = '¡Hundiste el ' + sunkShip.name + '!';
+        }
+      }
+      _prevEnemySunkIds = enemySunk;
+    }
+  }
+
   function handleTurnChange(currentTurn) {
+    // Mostrar panel de flota al inicio del combate
+    var fleetStatus = document.getElementById('fleet-status');
+    if (fleetStatus && fleetStatus.hidden) {
+      fleetStatus.hidden = false;
+      updateFleetPanels([]); // Renderizado inicial: todos intactos
+    }
+
     _isMyTurn = (currentTurn === window.Game.playerKey);
     var indicator = document.getElementById('turn-indicator');
     if (indicator) {
@@ -133,6 +214,8 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     if (attacks.length > 0) {
       historyPanel.hidden = false;
     }
+
+    updateFleetPanels(attacks);
   }
 
   function handleGameFinished(winnerKey) {
