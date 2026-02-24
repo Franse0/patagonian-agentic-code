@@ -88,9 +88,12 @@ def main():
 
         # Paso 2: Clasificar issue
         logger.info("Step 2: Classifying issue type")
+        # Pasar número, título y cuerpo del issue al clasificador
+        issue_title = issue['title']
+        issue_body = issue['body']
         classify_result = execute_template(AgentTemplateRequest(
             slash_command="/classify_issue",
-            args=[str(issue_number)],
+            args=[str(issue_number), issue_title, issue_body],
             adw_id=adw_id,
             agent_name="classifier",
             model="sonnet"

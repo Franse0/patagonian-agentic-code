@@ -17,7 +17,16 @@ Lee la descripción de una tarea/issue y devuelve qué tipo de trabajo es para s
 - Si es ambiguo o mezcla demasiado → `0`
 
 ## Input
-$ARGUMENTS
+
+$ARGUMENTOS
+
+Formato: `[issue_number, issue_title, issue_body]`
+
+- **issue_number**: número del issue (ej: "29")
+- **issue_title**: título del issue desde GitHub
+- **issue_body**: cuerpo/descripción del issue desde GitHub
+
+Clasificar basándose en el título y el cuerpo del issue proporcionados.
 
 ## Output
 
