@@ -587,6 +587,7 @@ function checkVictoryCondition(myAttacks, opponentShips) {
           var result = await FirebaseGame.joinRoom(code, playerId);
           window.Game.roomId = result.roomId;
           window.Game.playerKey = result.playerKey;
+          hideSpinner();
           handleBothConnected();
         } catch (e) {
           hideSpinner();

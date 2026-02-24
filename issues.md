@@ -321,4 +321,39 @@ cada ataque.
 - Actualizar los paneles desde el listener `onAttacksChange` en `firebase-game.js`
 - Los paneles deben ser capturables por el reviewer simulando via JS:
   `driver.execute_script("document.getElementById('fleet-status').hidden = false")`
+
+---
+
+## Issue 11 — Spinner de Cargando Permanente al Unirse
+
+**Título:** `bug: spinner de cargando permanente al unirse a sala`
+
+**Cuerpo:**
 ```
+Cuando un jugador se une a una partida existente, el spinner de "Conectando..."
+permanece visible en pantalla indefinidamente, bloqueando la UI del juego.
+
+## Descripción
+Al unirse a una sala con el código, el spinner de carga se muestra pero nunca
+se oculta antes de la transición a la pantalla de juego. Esto deja al jugador
+con el mensaje "Conectando..." superpuesto sobre el tablero de juego.
+
+## Pasos para Reproducir
+1. Jugador 1 crea una sala y obtiene el código
+2. Jugador 2 ingresa el código y presiona "Unirse"
+3. El spinner "Conectando..." aparece
+4. La transición al juego ocurre, pero el spinner permanece visible
+
+## Comportamiento Esperado
+El spinner debe ocultarse antes de mostrar la pantalla de juego, igual que
+en el flujo de "Crear sala".
+
+## Criterios de Aceptación
+- El spinner se oculta correctamente al unirse a una sala
+- La transición al juego es limpia sin elementos superpuestos
+- El flujo de "unirse" es consistente con el de "crear sala"
+
+## Notas Técnicas
+- Archivo afectado: `js/game.js` línea ~590
+- La función `hideSpinner()` debe llamarse antes de `handleBothConnected()`
+``````
