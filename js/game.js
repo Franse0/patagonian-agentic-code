@@ -531,8 +531,15 @@ function checkVictoryCondition(myAttacks, opponentShips) {
                 return;
               }
             }
-            var nextTurn = window.Game.playerKey === 'player1' ? 'player2' : 'player1';
-            FirebaseGame.setTurn(window.Game.roomId, nextTurn);
+            if (result === 'miss') {
+              var nextTurn = window.Game.playerKey === 'player1' ? 'player2' : 'player1';
+              FirebaseGame.setTurn(window.Game.roomId, nextTurn);
+            } else {
+              // Hit sin victoria: el jugador conserva el turno
+              _isMyTurn = true;
+              if (enemyBoard) enemyBoard.classList.remove('board--disabled');
+              popStatus('¡Impacto! Seguís atacando.');
+            }
           });
       });
     }
