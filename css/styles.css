@@ -23,6 +23,8 @@
   --color-miss: #5d6d7e;
   --color-hit-received: rgba(231, 76, 60, 0.6);
   --color-miss-received: rgba(93, 109, 126, 0.45);
+  --color-sunk: #8b3a2a;
+  --color-sunk-received: rgba(139, 58, 42, 0.7);
   --board-size: 11; /* 1 label col/row + 10 cells */
   --cell-size: 38px;
 }
@@ -609,6 +611,40 @@ header {
 /* === Combat cell states — player board (defender's view) === */
 .cell--hit-received  { background: var(--color-hit-received);  }
 .cell--miss-received { background: var(--color-miss-received); }
+
+/* === Sunk ship cells (persistent, overrides hit color) === */
+.cell--sunk {
+  background: var(--color-sunk) !important;
+  cursor: default;
+  position: relative;
+}
+.cell--sunk::after {
+  content: '\2715';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  pointer-events: none;
+}
+
+.cell--sunk-received {
+  background: var(--color-sunk-received) !important;
+  position: relative;
+}
+.cell--sunk-received::after {
+  content: '\2715';
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.55);
+  pointer-events: none;
+}
 
 /* Enemy board disabled during opponent's turn */
 #enemy-board.board--disabled { pointer-events: none; opacity: 0.6; }

@@ -160,6 +160,23 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     });
   }
 
+  function markSunkCells(sunkIds, ships, boardPrefix, sunkClass) {
+    // sunkIds: array of ship IDs that are fully sunk
+    // ships: { shipId: ['cell-A1', ...] }
+    // boardPrefix: '' for player board, 'enemy-' for enemy board
+    // sunkClass: 'cell--sunk' or 'cell--sunk-received'
+    sunkIds.forEach(function (shipId) {
+      var cells = ships[shipId] || [];
+      cells.forEach(function (cellId) {
+        var rawId = cellId.replace('cell-', '');
+        var el = document.getElementById(boardPrefix + 'cell-' + rawId);
+        if (el) {
+          el.classList.add(sunkClass);
+        }
+      });
+    });
+  }
+
   function updateFleetPanels(attacks) {
     var myKey = window.Game.playerKey;
     var opponentKey = myKey === 'player1' ? 'player2' : 'player1';
@@ -172,6 +189,7 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     if (myShips) {
       var mySunk = getSunkShips(opponentAttacks, myShips);
       renderFleetPanel('player-fleet', mySunk);
+      markSunkCells(mySunk, myShips, '', 'cell--sunk-received');
     }
 
     // Flota enemiga: tus ataques sobre los barcos del oponente
@@ -180,6 +198,7 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     if (enemyShips) {
       var enemySunk = getSunkShips(myAttacks, enemyShips);
       renderFleetPanel('enemy-fleet', enemySunk);
+      markSunkCells(enemySunk, enemyShips, 'enemy-', 'cell--sunk');
 
       // Notificación cuando se hunde un nuevo barco enemigo
       var newlySunk = enemySunk.filter(function (id) {
