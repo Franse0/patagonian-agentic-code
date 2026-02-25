@@ -357,3 +357,124 @@ en el flujo de "Crear sala".
 - Archivo afectado: `js/game.js` línea ~590
 - La función `hideSpinner()` debe llamarse antes de `handleBothConnected()`
 ``````
+
+---
+
+## Issue 12 — Turno Continuo al Impactar un Barco
+
+**Título:** `turno continúa al impactar, solo pasa al fallar`
+
+**Cuerpo:**
+```
+Actualmente el turno pasa al oponente después de cada ataque, sin importar el resultado.
+El comportamiento correcto es que si el ataque es un impacto (hit), el jugador
+conserva el turno y puede seguir atacando.
+
+## Descripción
+En la mecánica clásica de Batalla Naval, acertar un disparo premia al jugador
+con un turno adicional. El turno solo se cede al oponente cuando el ataque
+cae en agua (miss).
+
+## Criterios de Aceptación
+- Si el ataque resulta en hit, el turno sigue siendo del jugador activo
+- Si el ataque resulta en miss, el turno pasa al oponente
+- El indicador de turno ("Tu turno" / "Turno del oponente") refleja el estado correcto en ambos clientes
+- El tablero enemigo permanece clickeable para el jugador activo mientras siga su turno
+- Mensaje de feedback diferenciado: "¡Impacto! Seguís atacando." vs "Agua... turno del oponente."
+
+## Notas Técnicas
+- La lógica de cambio de turno está en `js/firebase-game.js` (función que actualiza `currentTurn`)
+- Solo se debe actualizar `currentTurn` en Firebase cuando el resultado es `miss`
+- Los listeners de `onValue` ya propagan el cambio a ambos clientes automáticamente
+```
+
+---
+
+## Issue 13 — Barco Hundido se Tacha Visualmente en el Tablero
+
+**Título:** `marcar visualmente barcos hundidos en el tablero`
+
+**Cuerpo:**
+```
+Cuando un barco es completamente hundido, sus celdas no se distinguen
+visualmente de un hit normal. Se necesita un indicador claro en el tablero
+que marque el barco como hundido.
+
+## Descripción
+Al hundir un barco completo, todas las celdas que ocupaba deben recibir
+un estilo especial (por ejemplo, una línea tachada, un ícono diferente o un
+color distinto al rojo de hit simple) para que el jugador pueda identificar
+de un vistazo qué barcos ya terminó de atacar.
+
+## Criterios de Aceptación
+- Al hundir un barco, todas sus celdas se marcan con un estilo "hundido" distinto al hit normal
+- El estilo "hundido" aplica tanto en el tablero enemigo (atacante) como en el tablero propio (defensor)
+- El marcado es persistente: se mantiene si el listener de Firebase vuelve a procesar los ataques
+- Las celdas hundidas siguen siendo no-clickeables
+- El estilo es visualmente distinguible del hit simple (ej. clase CSS `cell-sunk` con ícono de barco tachado o color diferente)
+
+## Notas Técnicas
+- Usar la función existente `getSunkShips(attacks, ships)` para obtener los barcos hundidos
+- Agregar clase CSS `cell-sunk` a las celdas correspondientes al procesar cada ataque
+- Actualizar el renderizado en `js/ui.js` donde se pintan los resultados de ataques
+```
+
+---
+
+## Issue 14 — Tamaño de Barco en Panel de Flota
+
+**Título:** `mostrar tamaño de cada barco en el panel de flota`
+
+**Cuerpo:**
+```
+El panel de flota (inferior) muestra el nombre de cada barco pero no su tamaño,
+lo que dificulta saber cuántas celdas ocupa cada uno sin memorizar las reglas.
+
+## Descripción
+Agregar junto al nombre de cada barco una representación visual de su tamaño
+usando cuadraditos (ej. "Acorazado ■■■■"), de modo que el jugador pueda
+identificar de un vistazo cuántas celdas debe impactar para hundirlo.
+
+## Criterios de Aceptación
+- Cada barco en el panel "Tu Flota" y "Flota Enemiga" muestra su tamaño en bloques: ■ por cada celda
+- Ejemplo esperado: "Portaaviones ■■■■■", "Acorazado ■■■■", "Crucero ■■■", "Submarino ■■■", "Destructor ■■"
+- Los bloques de barcos hundidos se muestran con el estilo "hundido" correspondiente
+- El cambio es puramente visual (HTML/CSS), sin modificar la lógica del juego
+
+## Notas Técnicas
+- Modificar la generación del panel de flota en `js/ui.js`
+- Usar el carácter ■ (U+25A0) o spans con clase CSS para los bloques de tamaño
+- El tamaño de cada barco ya está definido en la configuración de barcos de `js/game.js`
+```
+
+---
+
+## Issue 15 — Botón para Ocultar/Mostrar Tu Tablero
+
+**Título:** `botón para ocultar y mostrar el tablero propio`
+
+**Cuerpo:**
+```
+En entornos donde otros pueden ver el monitor (ej. oficina), el jugador necesita
+poder ocultar su tablero rápidamente para no revelar la posición de sus barcos
+al oponente que esté mirando la pantalla.
+
+## Descripción
+Agregar un botón toggle junto al tablero propio que alterne entre ocultar y
+mostrar el contenido del tablero del jugador local. Al ocultarlo, las celdas
+y barcos no deben ser visibles, pero la estructura del tablero puede mantenerse
+para no romper el layout.
+
+## Criterios de Aceptación
+- Botón visible junto al título "Tu tablero" durante la fase de combate
+- Al presionar el botón, el tablero propio se oculta (celdas no visibles)
+- El mismo botón permite volver a mostrar el tablero
+- El texto/ícono del botón cambia según el estado: ej. "Ocultar tablero" / "Mostrar tablero"
+- Ocultar el tablero no interrumpe la partida ni los listeners de Firebase
+- El estado oculto/visible es solo local, no se sincroniza con el oponente
+
+## Notas Técnicas
+- Agregar clase CSS `board-hidden` al contenedor del tablero propio para ocultar el contenido
+- El botón toggle puede estar en `js/ui.js` o directamente en `index.html`
+- No afectar el tablero enemigo ni la lógica del juego
+```
