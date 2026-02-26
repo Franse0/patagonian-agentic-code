@@ -142,6 +142,23 @@ async function resetRoom(roomId) {
   await update(ref(db), updates);
 }
 
+async function reconnectRoom(roomId, playerId) {
+  const snapshot = await get(ref(db, `rooms/${roomId}`));
+  if (!snapshot.exists()) {
+    throw new Error('Sala no encontrada');
+  }
+  const data = snapshot.val();
+  let playerKey;
+  if (data.player1 && data.player1.id === playerId) {
+    playerKey = 'player1';
+  } else if (data.player2 && data.player2.id === playerId) {
+    playerKey = 'player2';
+  } else {
+    throw new Error('Jugador no encontrado en la sala');
+  }
+  return { roomId, playerKey, data };
+}
+
 function getRoomData() {
   return _roomData;
 }
@@ -153,4 +170,4 @@ function destroy() {
   }
 }
 
-export const FirebaseGame = { createRoom, joinRoom, listenRoom, destroy, syncReadyState, registerAttack, startGame, setTurn, setWinner, getRoomData, resetRoom };
+export const FirebaseGame = { createRoom, joinRoom, listenRoom, destroy, syncReadyState, registerAttack, startGame, setTurn, setWinner, getRoomData, resetRoom, reconnectRoom };

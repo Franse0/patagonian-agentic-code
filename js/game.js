@@ -1,6 +1,7 @@
 /* game.js — Main game controller for Batalla Naval */
 
 import { FirebaseGame } from './firebase-game.js';
+import { saveSession, loadSession, clearSession } from './session.js';
 
 function getSunkShips(attacks, ships) {
   // attacks: [{cell, playerId, result}] — cell sin prefijo 'cell-'
@@ -493,8 +494,178 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     }
     if (btnExit) {
       btnExit.addEventListener('click', function () {
+        clearSession();
         window.location.reload();
       }, { once: true });
+    }
+  }
+
+  async function restoreGamePhase(data) {
+    var homeScreen = document.getElementById('home-screen');
+    var lobbyScreen = document.getElementById('lobby');
+    var roomId = window.Game.roomId;
+    var playerKey = window.Game.playerKey;
+
+    if (data.status === 'waiting') {
+      // Player1 waiting for player2
+      hideScreen(homeScreen);
+      showScreen(lobbyScreen);
+      var codeDisplay = document.getElementById('room-code-display');
+      var codeValue = document.getElementById('room-code-value');
+      if (codeValue) codeValue.textContent = roomId;
+      if (codeDisplay) codeDisplay.hidden = false;
+      setLobbyStatus('Esperando oponente...', false);
+      // Hide lobby form elements since we're already in a room
+      var form = document.getElementById('join-form');
+      var btn = document.getElementById('btn-create-room');
+      var nameGroup = document.querySelector('.player-name-group');
+      var divider = document.querySelector('.lobby-divider');
+      var desc = document.querySelector('.lobby-description');
+      if (form) form.hidden = true;
+      if (btn) btn.hidden = true;
+      if (nameGroup) nameGroup.hidden = true;
+      if (divider) divider.hidden = true;
+      if (desc) desc.hidden = true;
+      FirebaseGame.listenRoom(roomId, {
+        onPlayerJoined: function () {
+          handleBothConnected();
+        },
+        onStatusChange: function () {}
+      });
+
+    } else if (data.status === 'placing') {
+      hideScreen(homeScreen);
+      handleBothConnected();
+      if (data[playerKey] && data[playerKey].ready === true) {
+        // Player already marked ready — hide placement, show waiting
+        var placementPhase = document.getElementById('placement-phase');
+        if (placementPhase) placementPhase.hidden = true;
+        var status = document.getElementById('game-status');
+        if (status) status.textContent = 'Fase de colocación completa — esperando al oponente...';
+        FirebaseGame.listenRoom(roomId, {
+          onPlayerJoined: function () {},
+          onStatusChange: function (s) {
+            if (s === 'placing') {
+              var endScreen = document.getElementById('end-screen');
+              if (endScreen && !endScreen.hidden) {
+                handleReturnToPlacing();
+              }
+            }
+          },
+          onBothReady: handleBothReady,
+          onTurnChange: handleTurnChange,
+          onAttacksChange: handleAttacksChange,
+          onGameFinished: function (winnerKey) { handleGameFinished(winnerKey); }
+        });
+      } else {
+        // Player needs to re-place ships
+        FirebaseGame.listenRoom(roomId, {
+          onPlayerJoined: function () {},
+          onStatusChange: function (s) {
+            if (s === 'placing') {
+              var endScreen = document.getElementById('end-screen');
+              if (endScreen && !endScreen.hidden) {
+                handleReturnToPlacing();
+              }
+            }
+          },
+          onBothReady: handleBothReady,
+          onTurnChange: handleTurnChange,
+          onAttacksChange: handleAttacksChange,
+          onGameFinished: function (winnerKey) { handleGameFinished(winnerKey); }
+        });
+      }
+
+    } else if (data.status === 'playing') {
+      hideScreen(homeScreen);
+      handleBothConnected();
+      var placementPhase = document.getElementById('placement-phase');
+      if (placementPhase) placementPhase.hidden = true;
+
+      // Restore fleet state from Firebase
+      if (data[playerKey] && data[playerKey].ships) {
+        fleetState = data[playerKey].ships;
+        Placement.renderShipsOnBoard(data[playerKey].ships);
+      }
+
+      // Process all existing attacks
+      var attacksArr = data.attacks ? Object.values(data.attacks) : [];
+      handleAttacksChange(attacksArr);
+
+      // Show fleet status
+      var fleetStatus = document.getElementById('fleet-status');
+      if (fleetStatus) {
+        fleetStatus.hidden = false;
+        updateFleetPanels(attacksArr);
+      }
+
+      // Show turn indicator
+      if (data.currentTurn) {
+        handleTurnChange(data.currentTurn);
+      }
+
+      // Show toggle button
+      var toggleBtn = document.getElementById('btn-toggle-board');
+      if (toggleBtn && toggleBtn.hidden) {
+        var isMobile = window.matchMedia('(max-width: 900px)').matches;
+        toggleBtn.textContent = isMobile ? 'Mostrar mi tablero' : 'Ocultar mi tablero';
+        toggleBtn.setAttribute('aria-label', isMobile ? 'Mostrar mi tablero' : 'Ocultar mi tablero');
+        toggleBtn.hidden = false;
+        toggleBtn.addEventListener('click', function () {
+          var container = document.getElementById('game-container');
+          var isHiding = container.classList.toggle('--hiding-own');
+          toggleBtn.setAttribute('aria-pressed', isHiding ? 'true' : 'false');
+          toggleBtn.textContent = isHiding ? 'Mostrar mi tablero' : 'Ocultar mi tablero';
+          toggleBtn.setAttribute('aria-label', isHiding ? 'Mostrar mi tablero' : 'Ocultar mi tablero');
+        });
+      }
+
+      // Register listener for ongoing game
+      FirebaseGame.listenRoom(roomId, {
+        onPlayerJoined: function () {},
+        onStatusChange: function (s) {
+          if (s === 'placing') {
+            var endScreen = document.getElementById('end-screen');
+            if (endScreen && !endScreen.hidden) {
+              handleReturnToPlacing();
+            }
+          }
+        },
+        onBothReady: handleBothReady,
+        onTurnChange: handleTurnChange,
+        onAttacksChange: handleAttacksChange,
+        onGameFinished: function (winnerKey) { handleGameFinished(winnerKey); }
+      });
+
+    } else if (data.status === 'finished') {
+      hideScreen(homeScreen);
+      handleBothConnected();
+
+      // Restore fleet state and attacks for stats
+      if (data[playerKey] && data[playerKey].ships) {
+        fleetState = data[playerKey].ships;
+      }
+
+      handleGameFinished(data.winner);
+
+      // Register listener for rematch — use no-op for onGameFinished
+      // since we already called handleGameFinished above.
+      // When rematch triggers, onReady registers a fresh listener with real callbacks.
+      FirebaseGame.listenRoom(roomId, {
+        onPlayerJoined: function () {},
+        onStatusChange: function (s) {
+          if (s === 'placing') {
+            var endScreen = document.getElementById('end-screen');
+            if (endScreen && !endScreen.hidden) {
+              handleReturnToPlacing();
+            }
+          }
+        },
+        onBothReady: handleBothReady,
+        onTurnChange: handleTurnChange,
+        onAttacksChange: handleAttacksChange,
+        onGameFinished: function () {}
+      });
     }
   }
 
@@ -532,7 +703,7 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     }
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
+  document.addEventListener('DOMContentLoaded', async function () {
     // --- Home screen → Lobby navigation ---
     var homeScreen = document.getElementById('home-screen');
     var lobbyScreen = document.getElementById('lobby');
@@ -603,6 +774,34 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     var btnReady = document.getElementById('btn-ready');
     if (btnReady) {
       btnReady.addEventListener('click', onReady);
+    }
+
+    // --- Reconnection: restore session after refresh ---
+    var savedSession = loadSession();
+    if (savedSession) {
+      showSpinner();
+      hideScreen(homeScreen);
+      showScreen(lobbyScreen);
+      try {
+        var sess = savedSession;
+        var reconnectResult = await FirebaseGame.reconnectRoom(sess.roomId, sess.playerId);
+
+        // Restore identity
+        window.Game.roomId = sess.roomId;
+        window.Game.playerKey = reconnectResult.playerKey;
+        window.Game.playerId = sess.playerId;
+        window.Game.playerName = sess.playerName;
+        if (playerNameInput) playerNameInput.value = sess.playerName || '';
+
+        hideSpinner();
+        await restoreGamePhase(reconnectResult.data);
+      } catch (err) {
+        clearSession();
+        hideSpinner();
+        // Show home screen normally
+        hideScreen(lobbyScreen);
+        showScreen(homeScreen);
+      }
     }
 
     // --- Combat: Enemy board clicks ---
@@ -681,6 +880,7 @@ function checkVictoryCondition(myAttacks, opponentShips) {
           var result = await FirebaseGame.createRoom(playerId);
           window.Game.roomId = result.roomId;
           window.Game.playerKey = result.playerKey;
+          saveSession(result.roomId, result.playerKey, playerId, window.Game.playerName);
 
           hideSpinner();
 
@@ -720,6 +920,7 @@ function checkVictoryCondition(myAttacks, opponentShips) {
           var result = await FirebaseGame.joinRoom(code, playerId);
           window.Game.roomId = result.roomId;
           window.Game.playerKey = result.playerKey;
+          saveSession(result.roomId, result.playerKey, playerId, window.Game.playerName);
           hideSpinner();
           handleBothConnected();
         } catch (e) {
