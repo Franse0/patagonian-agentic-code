@@ -126,7 +126,14 @@ function checkVictoryCondition(myAttacks, opponentShips) {
       .then(function () {
         FirebaseGame.listenRoom(window.Game.roomId, {
           onPlayerJoined: function () {},
-          onStatusChange: function () {},
+          onStatusChange: function (status) {
+            if (status === 'placing') {
+              var endScreen = document.getElementById('end-screen');
+              if (endScreen && !endScreen.hidden) {
+                handleReturnToPlacing();
+              }
+            }
+          },
           onBothReady: handleBothReady,
           onTurnChange: handleTurnChange,
           onAttacksChange: handleAttacksChange,
@@ -359,6 +366,65 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     updateFleetPanels(attacks);
   }
 
+  function handleReturnToPlacing() {
+    // Resetear estado interno del juego
+    fleetState = null;
+    _isMyTurn = false;
+    _prevEnemySunkIds = [];
+
+    // Transición de pantalla
+    var endScreen = document.getElementById('end-screen');
+    var gameContainer = document.getElementById('game-container');
+    hideScreen(endScreen);
+    showScreen(gameContainer);
+
+    // Mostrar fase de colocación nuevamente
+    var placementPhase = document.getElementById('placement-phase');
+    if (placementPhase) placementPhase.hidden = false;
+
+    // Ocultar UI de combate
+    var fleetStatus = document.getElementById('fleet-status');
+    if (fleetStatus) fleetStatus.hidden = true;
+    var attackHistory = document.getElementById('attack-history');
+    if (attackHistory) attackHistory.hidden = true;
+    var turnIndicator = document.getElementById('turn-indicator');
+    if (turnIndicator) turnIndicator.hidden = true;
+
+    // Resetear botón toggle
+    var toggleBtn = document.getElementById('btn-toggle-board');
+    if (toggleBtn) {
+      toggleBtn.hidden = true;
+      toggleBtn.setAttribute('aria-pressed', 'false');
+      toggleBtn.textContent = 'Ocultar mi tablero';
+    }
+    if (gameContainer) gameContainer.classList.remove('--hiding-own');
+
+    // Limpiar clases de combate del tablero propio
+    var playerBoard = document.getElementById('player-board');
+    if (playerBoard) {
+      playerBoard.querySelectorAll('.cell').forEach(function (cell) {
+        cell.classList.remove('cell--hit-received', 'cell--miss-received', 'cell--sunk-received');
+      });
+    }
+
+    // Limpiar clases de combate del tablero enemigo
+    var enemyBoard = document.getElementById('enemy-board');
+    if (enemyBoard) {
+      enemyBoard.querySelectorAll('.cell').forEach(function (cell) {
+        cell.classList.remove('cell--attacked--hit', 'cell--attacked--miss', 'cell--sunk');
+      });
+    }
+
+    // Resetear barcos colocados (sin rellamar bindEvents para evitar listeners duplicados)
+    Placement.clearAllPlacements();
+    var btnReady = document.getElementById('btn-ready');
+    if (btnReady) btnReady.disabled = true;
+
+    // Mensaje de estado
+    var status = document.getElementById('game-status');
+    if (status) status.textContent = 'Colocá tus barcos para comenzar';
+  }
+
   function handleGameFinished(winnerKey) {
     var gameContainer = document.getElementById('game-container');
     var endScreen = document.getElementById('end-screen');
@@ -422,13 +488,13 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     var btnExit = document.getElementById('btn-exit');
     if (btnRematch) {
       btnRematch.addEventListener('click', function () {
-        window.location.reload();
-      });
+        FirebaseGame.resetRoom(window.Game.roomId);
+      }, { once: true });
     }
     if (btnExit) {
       btnExit.addEventListener('click', function () {
         window.location.reload();
-      });
+      }, { once: true });
     }
   }
 
