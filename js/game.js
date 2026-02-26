@@ -253,13 +253,17 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     // Mostrar botón de toggle al iniciar combate
     var toggleBtn = document.getElementById('btn-toggle-board');
     if (toggleBtn && toggleBtn.hidden) {
+      var isMobile = window.matchMedia('(max-width: 900px)').matches;
+      // En mobile el tablero propio empieza oculto por CSS; botón invita a mostrarlo
+      toggleBtn.textContent = isMobile ? 'Mostrar mi tablero' : 'Ocultar mi tablero';
+      toggleBtn.setAttribute('aria-label', isMobile ? 'Mostrar mi tablero' : 'Ocultar mi tablero');
       toggleBtn.hidden = false;
       toggleBtn.addEventListener('click', function () {
         var container = document.getElementById('game-container');
-        var isShowingOwn = container.classList.toggle('--showing-own');
-        toggleBtn.setAttribute('aria-pressed', isShowingOwn ? 'true' : 'false');
-        toggleBtn.textContent = isShowingOwn ? 'Ver tablero enemigo' : 'Ver mi tablero';
-        toggleBtn.setAttribute('aria-label', isShowingOwn ? 'Ver tablero enemigo' : 'Ver mi tablero');
+        var isHiding = container.classList.toggle('--hiding-own');
+        toggleBtn.setAttribute('aria-pressed', isHiding ? 'true' : 'false');
+        toggleBtn.textContent = isHiding ? 'Mostrar mi tablero' : 'Ocultar mi tablero';
+        toggleBtn.setAttribute('aria-label', isHiding ? 'Mostrar mi tablero' : 'Ocultar mi tablero');
       });
     }
 
@@ -360,12 +364,12 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     var endScreen = document.getElementById('end-screen');
 
     // Resetear toggle al finalizar partida
-    if (gameContainer) gameContainer.classList.remove('--showing-own');
+    if (gameContainer) gameContainer.classList.remove('--hiding-own');
     var toggleBtn = document.getElementById('btn-toggle-board');
     if (toggleBtn) {
       toggleBtn.hidden = true;
       toggleBtn.setAttribute('aria-pressed', 'false');
-      toggleBtn.textContent = 'Ver mi tablero';
+      toggleBtn.textContent = 'Ocultar mi tablero';
     }
 
     hideScreen(gameContainer);
