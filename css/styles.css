@@ -411,6 +411,30 @@ header {
   color: var(--color-hit);
 }
 
+.fleet-item-name {
+  flex: 0 0 auto;
+}
+
+.fleet-item-blocks {
+  display: flex;
+  gap: 2px;
+  align-items: center;
+  margin-left: auto;
+}
+
+.fleet-item-block {
+  width: 8px;
+  height: 8px;
+  background: #4a90d9;
+  border-radius: 1px;
+  flex-shrink: 0;
+}
+
+.fleet-item--sunk .fleet-item-block {
+  background: var(--color-hit);
+  opacity: 0.7;
+}
+
 /* === Board === */
 .board-wrapper {
   background: var(--color-surface);

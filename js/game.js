@@ -29,11 +29,11 @@ function checkVictoryCondition(myAttacks, opponentShips) {
   'use strict';
 
   var SHIPS = [
-    { id: 'carrier',    name: 'Portaaviones' },
-    { id: 'battleship', name: 'Acorazado' },
-    { id: 'cruiser',    name: 'Crucero' },
-    { id: 'submarine',  name: 'Submarino' },
-    { id: 'destroyer',  name: 'Destructor' }
+    { id: 'carrier',    name: 'Portaaviones', size: 5 },
+    { id: 'battleship', name: 'Acorazado',    size: 4 },
+    { id: 'cruiser',    name: 'Crucero',       size: 3 },
+    { id: 'submarine',  name: 'Submarino',     size: 3 },
+    { id: 'destroyer',  name: 'Destructor',    size: 2 }
   ];
 
   var fleetState = null;
@@ -155,7 +155,21 @@ function checkVictoryCondition(myAttacks, opponentShips) {
       var li = document.createElement('li');
       var isSunk = sunkIds.indexOf(ship.id) !== -1;
       li.className = 'fleet-item' + (isSunk ? ' fleet-item--sunk' : '');
-      li.textContent = ship.name;
+
+      var nameSpan = document.createElement('span');
+      nameSpan.className = 'fleet-item-name';
+      nameSpan.textContent = ship.name;
+      li.appendChild(nameSpan);
+
+      var blocksSpan = document.createElement('span');
+      blocksSpan.className = 'fleet-item-blocks';
+      for (var i = 0; i < ship.size; i++) {
+        var block = document.createElement('span');
+        block.className = 'fleet-item-block';
+        blocksSpan.appendChild(block);
+      }
+      li.appendChild(blocksSpan);
+
       list.appendChild(li);
     });
   }
