@@ -8,6 +8,7 @@ let _lastTurn = null;
 let _lastAttacksLen = -1;
 let _roomData = null;
 let _gameFinished = false;
+let _unsubscribeMessages = null;
 
 function generateRoomId() {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -129,6 +130,29 @@ async function setTurn(roomId, nextTurn) {
   await update(ref(db), { [`rooms/${roomId}/currentTurn`]: nextTurn });
 }
 
+async function sendMessage(roomId, playerKey, text) {
+  const msgRef = ref(db, `rooms/${roomId}/messages`);
+  await push(msgRef, { playerKey, text, timestamp: Date.now() });
+}
+
+function listenMessages(roomId, callback) {
+  destroyMessages();
+  const msgRef = ref(db, `rooms/${roomId}/messages`);
+  _unsubscribeMessages = onValue(msgRef, (snapshot) => {
+    const data = snapshot.val();
+    const messages = data ? Object.values(data) : [];
+    messages.sort((a, b) => (a.timestamp || 0) - (b.timestamp || 0));
+    callback(messages);
+  });
+}
+
+function destroyMessages() {
+  if (_unsubscribeMessages) {
+    _unsubscribeMessages();
+    _unsubscribeMessages = null;
+  }
+}
+
 async function resetRoom(roomId) {
   const updates = {};
   updates[`rooms/${roomId}/status`] = 'placing';
@@ -139,6 +163,7 @@ async function resetRoom(roomId) {
   updates[`rooms/${roomId}/player2/ready`] = false;
   updates[`rooms/${roomId}/player1/ships`] = null;
   updates[`rooms/${roomId}/player2/ships`] = null;
+  updates[`rooms/${roomId}/messages`] = null;
   await update(ref(db), updates);
 }
 
@@ -170,4 +195,4 @@ function destroy() {
   }
 }
 
-export const FirebaseGame = { createRoom, joinRoom, listenRoom, destroy, syncReadyState, registerAttack, startGame, setTurn, setWinner, getRoomData, resetRoom, reconnectRoom };
+export const FirebaseGame = { createRoom, joinRoom, listenRoom, destroy, syncReadyState, registerAttack, startGame, setTurn, setWinner, getRoomData, resetRoom, reconnectRoom, sendMessage, listenMessages, destroyMessages };
