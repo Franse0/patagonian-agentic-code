@@ -286,6 +286,7 @@ header {
   padding: 1rem;
   flex-wrap: wrap;
   justify-content: center;
+  position: relative;
 }
 
 .board-column {
@@ -1259,7 +1260,9 @@ header {
 
 /* === Abandon button === */
 #btn-abandon {
-  display: inline-flex;
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
   padding: 0.5rem 1.1rem;
   font-size: 0.9rem;
   font-weight: 600;

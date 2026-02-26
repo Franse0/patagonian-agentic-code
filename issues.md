@@ -644,3 +644,77 @@ confirmación. Si el jugador confirma, la página se recarga y vuelve al lobby.
 - Agregar el botón en `index.html` dentro del `game-container` para que esté disponible en colocación y combate
 - El botón se muestra cuando `game-container` es visible y se oculta cuando no lo es
 ```
+
+---
+
+## Issue 20 — Botón Abandonar Ocupa Demasiado Espacio
+
+**Título:** `bug: botón abandonar partida es demasiado grande y rompe el layout`
+
+**Cuerpo:**
+```
+El botón "Abandonar partida" aparece demasiado grande en pantalla, ocupando
+un ancho excesivo y rompiendo el layout del juego.
+
+## Descripción
+El botón `#btn-abandon` está colocado directamente como hijo del flex container
+`#game-container` sin posicionamiento específico. Al ser un elemento flex sin
+restricción de ancho, se estira tomando todo el espacio disponible en lugar
+de aparecer como un botón compacto en una esquina discreta.
+
+## Comportamiento Esperado
+El botón debe ser pequeño y discreto, posicionado en una esquina del
+`game-container` sin interferir con el layout de los tableros y paneles.
+Una buena ubicación es la esquina superior derecha, con tamaño similar
+al botón de ocultar tablero.
+
+## Criterios de Aceptación
+- El botón no rompe ni distorsiona el layout del juego
+- El botón es visualmente pequeño y discreto
+- El layout de tableros y paneles no se ve afectado por el botón
+
+## Notas Técnicas
+- El botón está en `index.html` como hijo directo de `#game-container` (flex container)
+- Solución: usar `position: absolute` o `position: fixed` para sacarlo del flujo flex,
+  o envolverlo en un contenedor posicionado en la esquina superior derecha
+- Alternativamente, alinearlo junto al botón `#btn-toggle-board` existente que ya
+  tiene estilos compactos correctos
+- Archivo CSS afectado: `css/styles.css`, regla `#btn-abandon`
+```
+
+---
+
+## Issue 21 — Chat sin Scroll, Crece Infinitamente
+
+**Título:** `bug: panel de chat no tiene scroll y crece en altura indefinidamente`
+
+**Cuerpo:**
+```
+El panel de chat no permite hacer scroll. A medida que se agregan mensajes,
+el panel crece en altura indefinidamente en vez de mantener un tamaño fijo
+y permitir desplazarse por los mensajes anteriores.
+
+## Descripción
+`.chat-column` tiene `min-height: 420px` pero no tiene `height` ni `max-height`
+fijo. Como resultado, `.chat-messages` (que tiene `flex: 1`) se expande sin
+límite y `overflow-y: auto` nunca se activa porque el contenedor siempre
+tiene espacio suficiente para crecer.
+
+El mismo problema ocurre en mobile: `#chat-overlay-messages` tiene
+`min-height: 120px` pero tampoco tiene `max-height`.
+
+## Criterios de Aceptación
+- El panel de chat desktop muestra aproximadamente 4-5 mensajes y luego permite scroll
+- Al llegar un mensaje nuevo, el scroll baja automáticamente al último mensaje
+- El panel de chat mobile (overlay) también tiene altura fija con scroll interno
+- El layout del juego no se ve afectado por la cantidad de mensajes en el chat
+
+## Notas Técnicas
+- Archivo afectado: `css/styles.css`
+- Fix en `.chat-column`: cambiar `min-height: 420px` por `height: 420px` para que
+  el hijo `flex: 1` quede contenido y `overflow-y: auto` se active
+- Fix en `#chat-overlay-messages`: agregar `max-height` (ej. `max-height: 200px`)
+  con `overflow-y: auto`
+- El scroll automático al último mensaje ya está implementado en JS con
+  `scrollTop = scrollHeight`; solo necesita que el contenedor tenga altura fija
+```
