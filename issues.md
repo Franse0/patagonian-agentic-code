@@ -611,3 +611,36 @@ se sincronizan via Firebase y se identifican como "Vos" (jugador local) o
 - En mobile, el botón flotante usa `position: fixed; bottom: 1rem; right: 1rem`
 - El contador de no leídos se incrementa con cada mensaje entrante cuando el panel está cerrado (solo mobile)
 ```
+
+---
+
+## Issue 19 — Botón para Abandonar la Partida
+
+**Título:** `feat: botón para abandonar la partida en cualquier momento`
+
+**Cuerpo:**
+```
+Una vez que ambos jugadores están conectados, no existe forma de salir de la
+partida sin cerrar el navegador. Si el oponente se desconecta o el jugador
+simplemente quiere salir, queda atrapado en el juego sin poder volver al lobby.
+
+## Descripción
+Agregar un botón "Abandonar partida" visible durante la fase de colocación de
+barcos y durante el combate. Al presionarlo, se muestra un diálogo de
+confirmación. Si el jugador confirma, la página se recarga y vuelve al lobby.
+
+## Criterios de Aceptación
+- Botón visible desde que ambos jugadores están conectados (fase de colocación en adelante)
+- El botón también está visible durante el combate
+- Al presionar el botón, aparece un diálogo de confirmación: "¿Seguro que querés abandonar la partida?"
+- Si el jugador confirma, la página se recarga (vuelve al lobby)
+- Si el jugador cancela, el diálogo se cierra y la partida continúa normalmente
+- El botón no es visible en el lobby ni en la pantalla de fin de partida
+
+## Notas Técnicas
+- Usar `window.confirm()` para el diálogo de confirmación (nativo del navegador, sin librerías)
+- Si confirma: `window.location.reload()`
+- El botón puede ir en el header o en una posición fija visible en ambas fases
+- Agregar el botón en `index.html` dentro del `game-container` para que esté disponible en colocación y combate
+- El botón se muestra cuando `game-container` es visible y se oculta cuando no lo es
+```

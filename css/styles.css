@@ -1257,6 +1257,26 @@ header {
   border-color: var(--color-primary);
 }
 
+/* === Abandon button === */
+#btn-abandon {
+  display: inline-flex;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  background: var(--color-btn-bg);
+  color: var(--color-heading);
+  border: 2px solid #b03030;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+#btn-abandon:hover {
+  background: #b03030;
+  border-color: #b03030;
+  color: #fff;
+}
+
 /* === Responsive === */
 
 /* Desktop: mostrar panel de chat en game-container */
