@@ -900,6 +900,18 @@ function checkVictoryCondition(myAttacks, opponentShips) {
       btnReady.addEventListener('click', onReady);
     }
 
+    // --- Abandon game ---
+    var btnAbandon = document.getElementById('btn-abandon');
+    if (btnAbandon) {
+      btnAbandon.addEventListener('click', function () {
+        var confirmed = window.confirm('¿Seguro que querés abandonar la partida?');
+        if (confirmed) {
+          clearSession();
+          window.location.reload();
+        }
+      });
+    }
+
     // --- Reconnection: restore session after refresh ---
     var savedSession = loadSession();
     if (savedSession) {

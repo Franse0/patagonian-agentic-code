@@ -265,19 +265,26 @@ def main():
                 # Intentar parsear salida JSON directamente
                 review_data = json.loads(review_result.output)
             except json.JSONDecodeError:
-                # Fallback: extraer JSON del contenido mixto buscando el bloque { ... }
-                logger.warning("Direct JSON parse failed, attempting to extract JSON from output")
+                # Fallback 1: limpiar markdown code blocks y reintentar
+                logger.warning("Direct JSON parse failed, attempting to strip markdown and retry")
                 try:
-                    match = re.search(r'\{.*\}', review_result.output, re.DOTALL)
-                    if match:
-                        review_data = json.loads(match.group())
-                        logger.info("Successfully extracted JSON from mixed output")
-                    else:
-                        logger.warning("Could not find JSON block in review output")
-                        review_data = None
+                    clean_output = re.sub(r'```(?:json)?', '', review_result.output).strip()
+                    review_data = json.loads(clean_output)
+                    logger.info("Successfully parsed JSON after stripping markdown")
                 except json.JSONDecodeError:
-                    logger.warning("Could not parse review output as JSON")
-                    review_data = None
+                    # Fallback 2: extraer JSON del contenido mixto buscando el bloque { ... }
+                    logger.warning("Markdown strip failed, attempting to extract JSON block from output")
+                    try:
+                        match = re.search(r'\{.*\}', clean_output, re.DOTALL)
+                        if match:
+                            review_data = json.loads(match.group())
+                            logger.info("Successfully extracted JSON from mixed output")
+                        else:
+                            logger.warning("Could not find JSON block in review output")
+                            review_data = None
+                    except json.JSONDecodeError:
+                        logger.warning("Could not parse review output as JSON")
+                        review_data = None
 
             if review_data:
                 logger.info(f"Review completed: {'SUCCESS' if review_data.get('success') else 'FAILED'}")
