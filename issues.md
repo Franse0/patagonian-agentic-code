@@ -563,3 +563,51 @@ intentar reconectar automáticamente.
 - Si el jugador ya había marcado "Listo" (`playerKey.ready === true` en Firebase), restaurar `fleetState` desde `roomData[playerKey].ships` y saltar directo a esperar al oponente o al combate
 - `playerId` debe leerse desde `sessionStorage` en vez de generarse de nuevo, para que Firebase identifique al jugador correctamente si se usan reglas de seguridad basadas en el ID
 ```
+
+---
+
+## Issue 18 — Chat entre Jugadores
+
+**Título:** `feat: chat de texto en tiempo real entre jugadores`
+
+**Cuerpo:**
+```
+Agregar un chat de texto simple para que los dos jugadores puedan comunicarse
+durante la partida, disponible desde que ambos se conectan hasta que uno
+presiona "Salir" o "Revancha".
+
+## Descripción
+Una vez que ambos jugadores están en la misma sala (desde la fase de colocación
+en adelante), deben poder enviarse mensajes de texto en tiempo real. Los mensajes
+se sincronizan via Firebase y se identifican como "Vos" (jugador local) o
+"Rival" (oponente). El chat se limpia al iniciar una revancha o al salir.
+
+## Criterios de Aceptación
+- El chat es visible desde que ambos jugadores están conectados (fase de colocación en adelante)
+- Solo texto libre, sin mensajes predefinidos
+- Cada mensaje se identifica con "Vos" o "Rival" según el remitente
+- Los mensajes se sincronizan en tiempo real entre ambos jugadores via Firebase
+- **Desktop**: panel de chat siempre visible a la derecha del tablero enemigo, como tercera columna
+- **Mobile**: botón flotante en la esquina inferior derecha con badge numérico de mensajes no leídos; al tocarlo se abre un panel de chat
+- El badge desaparece al abrir el chat
+- Los mensajes desaparecen al presionar "Revancha" (se limpian en Firebase junto al resto del estado)
+- Los mensajes desaparecen al presionar "Salir" (recarga de página)
+- No hay sonido de notificación, solo badge visual en mobile
+
+## Notas Técnicas
+- Estructura de datos en Firebase usando `push()` para evitar race conditions:
+  ```
+  rooms/{roomId}/messages/{pushKey}: {
+    playerKey: "player1" | "player2",
+    text: "hola!",
+    timestamp: 1234567890
+  }
+  ```
+- Agregar listener `onValue` para `rooms/{roomId}/messages` en `js/firebase-game.js`
+- Agregar función `sendMessage(roomId, playerKey, text)` en `js/firebase-game.js` usando `push()`
+- En `resetRoom()`, agregar `updates[rooms/${roomId}/messages] = null` para limpiar mensajes en la revancha
+- La UI del chat va en `js/ui.js` o directamente en `index.html`
+- En desktop, el panel de chat se agrega como tercera columna en el layout del `game-container`
+- En mobile, el botón flotante usa `position: fixed; bottom: 1rem; right: 1rem`
+- El contador de no leídos se incrementa con cada mensaje entrante cuando el panel está cerrado (solo mobile)
+```

@@ -40,6 +40,9 @@ function checkVictoryCondition(myAttacks, opponentShips) {
   var fleetState = null;
   var _isMyTurn = false;
   var _prevEnemySunkIds = [];
+  var _chatUnreadCount = 0;
+  var _chatPanelOpen = false;
+  var _prevMsgCount = 0;
   var playerId = (typeof crypto !== 'undefined' && crypto.randomUUID)
     ? crypto.randomUUID()
     : Math.random().toString(36).slice(2);
@@ -421,6 +424,16 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     var btnReady = document.getElementById('btn-ready');
     if (btnReady) btnReady.disabled = true;
 
+    // Limpiar UI del chat (los mensajes se limpian via Firebase resetRoom)
+    var chatMessages = document.getElementById('chat-messages');
+    if (chatMessages) chatMessages.innerHTML = '';
+    var chatOverlayMessages = document.getElementById('chat-overlay-messages');
+    if (chatOverlayMessages) chatOverlayMessages.innerHTML = '';
+    _chatUnreadCount = 0;
+    _prevMsgCount = 0;
+    var chatBadge = document.getElementById('chat-badge');
+    if (chatBadge) { chatBadge.textContent = '0'; chatBadge.hidden = true; }
+
     // Mensaje de estado
     var status = document.getElementById('game-status');
     if (status) status.textContent = 'Colocá tus barcos para comenzar';
@@ -673,11 +686,122 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     return fleetState;
   }
 
+  function initChat(roomId, myPlayerKey) {
+    FirebaseGame.listenMessages(roomId, function (messages) {
+      handleMessagesUpdate(messages, myPlayerKey);
+    });
+
+    var chatForm = document.getElementById('chat-form');
+    if (chatForm) {
+      chatForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        sendChatMessage(document.getElementById('chat-input'));
+      });
+    }
+
+    var chatOverlayForm = document.getElementById('chat-overlay-form');
+    if (chatOverlayForm) {
+      chatOverlayForm.addEventListener('submit', function (e) {
+        e.preventDefault();
+        sendChatMessage(document.getElementById('chat-overlay-input'));
+      });
+    }
+
+    var chatFab = document.getElementById('chat-fab');
+    if (chatFab) {
+      chatFab.addEventListener('click', function () {
+        var overlay = document.getElementById('chat-overlay');
+        if (overlay) overlay.hidden = false;
+        _chatPanelOpen = true;
+        _chatUnreadCount = 0;
+        var badge = document.getElementById('chat-badge');
+        if (badge) { badge.textContent = '0'; badge.hidden = true; }
+        var overlayInput = document.getElementById('chat-overlay-input');
+        if (overlayInput) overlayInput.focus();
+      });
+    }
+
+    var btnCloseChat = document.getElementById('btn-close-chat');
+    if (btnCloseChat) {
+      btnCloseChat.addEventListener('click', function () {
+        var overlay = document.getElementById('chat-overlay');
+        if (overlay) overlay.hidden = true;
+        _chatPanelOpen = false;
+      });
+    }
+
+    var chatPanel = document.getElementById('chat-panel');
+    if (chatPanel) chatPanel.hidden = false;
+
+    var fab = document.getElementById('chat-fab');
+    if (fab) fab.hidden = false;
+  }
+
+  function handleMessagesUpdate(messages, myPlayerKey) {
+    var desktopContainer = document.getElementById('chat-messages');
+    var mobileContainer = document.getElementById('chat-overlay-messages');
+
+    if (!messages || messages.length === 0) {
+      if (desktopContainer) desktopContainer.innerHTML = '';
+      if (mobileContainer) mobileContainer.innerHTML = '';
+      _chatUnreadCount = 0;
+      _prevMsgCount = 0;
+      var badge = document.getElementById('chat-badge');
+      if (badge) { badge.textContent = '0'; badge.hidden = true; }
+      return;
+    }
+
+    var html = '';
+    messages.forEach(function (msg) {
+      var isOwn = msg.playerKey === myPlayerKey;
+      var senderText = isOwn ? 'Vos' : 'Rival';
+      var msgClass = isOwn ? 'chat-msg chat-msg--own' : 'chat-msg chat-msg--rival';
+      html += '<div class="' + msgClass + '">';
+      html += '<span class="chat-msg-sender">' + senderText + '</span>';
+      html += escapeHtml(msg.text);
+      html += '</div>';
+    });
+
+    if (desktopContainer) {
+      desktopContainer.innerHTML = html;
+      desktopContainer.scrollTop = desktopContainer.scrollHeight;
+    }
+    if (mobileContainer) {
+      mobileContainer.innerHTML = html;
+      mobileContainer.scrollTop = mobileContainer.scrollHeight;
+    }
+
+    // Badge logic for mobile
+    if (messages.length > _prevMsgCount && !_chatPanelOpen) {
+      _chatUnreadCount += messages.length - _prevMsgCount;
+      var badge = document.getElementById('chat-badge');
+      if (badge) {
+        badge.textContent = String(_chatUnreadCount);
+        badge.hidden = false;
+      }
+    }
+    _prevMsgCount = messages.length;
+  }
+
+  function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  }
+
+  function sendChatMessage(inputEl) {
+    var text = inputEl.value.trim();
+    if (!text) return;
+    inputEl.value = '';
+    FirebaseGame.sendMessage(window.Game.roomId, window.Game.playerKey, text);
+  }
+
   function handleBothConnected() {
     var lobby = document.getElementById('lobby');
     var gameContainer = document.getElementById('game-container');
     hideScreen(lobby);
     showScreen(gameContainer);
+    initChat(window.Game.roomId, window.Game.playerKey);
   }
 
   function setLobbyStatus(message, isError) {
