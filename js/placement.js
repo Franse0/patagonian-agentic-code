@@ -408,6 +408,16 @@ window.Placement = (function () {
     updateReadyButton();
   }
 
+  function renderShipsOnBoard(ships) {
+    if (!ships) return;
+    Object.values(ships).forEach(function (cellList) {
+      cellList.forEach(function (cellId) {
+        var cellEl = document.getElementById(cellId);
+        if (cellEl) cellEl.classList.add('cell--ship');
+      });
+    });
+  }
+
   // --- Public API ---
   return {
     SHIPS: SHIPS,
@@ -415,6 +425,7 @@ window.Placement = (function () {
     getFleetState: getFleetState,
     randomPlacement: randomPlacement,
     clearAllPlacements: clearAllPlacements,
+    renderShipsOnBoard: renderShipsOnBoard,
     // Exposed for testing
     cellIdToCoords: cellIdToCoords,
     coordsToCellId: coordsToCellId,
