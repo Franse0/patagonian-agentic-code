@@ -61,6 +61,12 @@ function listenRoom(roomId, callbacks) {
     const data = snapshot.val();
     if (!data) return;
     _roomData = data;
+    // Revancha: si el juego terminó y el status vuelve a 'placing', reiniciar estado interno
+    if (_gameFinished && data.status === 'placing') {
+      _gameFinished = false;
+      _lastTurn = null;
+      _lastAttacksLen = -1;
+    }
     if (data.player1?.id && data.player2?.id && callbacks.onPlayerJoined) {
       callbacks.onPlayerJoined(data);
     }
@@ -123,6 +129,19 @@ async function setTurn(roomId, nextTurn) {
   await update(ref(db), { [`rooms/${roomId}/currentTurn`]: nextTurn });
 }
 
+async function resetRoom(roomId) {
+  const updates = {};
+  updates[`rooms/${roomId}/status`] = 'placing';
+  updates[`rooms/${roomId}/attacks`] = null;
+  updates[`rooms/${roomId}/winner`] = null;
+  updates[`rooms/${roomId}/currentTurn`] = null;
+  updates[`rooms/${roomId}/player1/ready`] = false;
+  updates[`rooms/${roomId}/player2/ready`] = false;
+  updates[`rooms/${roomId}/player1/ships`] = null;
+  updates[`rooms/${roomId}/player2/ships`] = null;
+  await update(ref(db), updates);
+}
+
 function getRoomData() {
   return _roomData;
 }
@@ -134,4 +153,4 @@ function destroy() {
   }
 }
 
-export const FirebaseGame = { createRoom, joinRoom, listenRoom, destroy, syncReadyState, registerAttack, startGame, setTurn, setWinner, getRoomData };
+export const FirebaseGame = { createRoom, joinRoom, listenRoom, destroy, syncReadyState, registerAttack, startGame, setTurn, setWinner, getRoomData, resetRoom };

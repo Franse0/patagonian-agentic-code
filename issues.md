@@ -478,3 +478,88 @@ para no romper el layout.
 - El botón toggle puede estar en `js/ui.js` o directamente en `index.html`
 - No afectar el tablero enemigo ni la lógica del juego
 ```
+
+---
+
+## Issue 16 — Botón Revancha No Funciona
+
+**Título:** `bug: el botón revancha no reinicia la partida en la misma sala`
+
+**Cuerpo:**
+```
+Al terminar una partida, el botón "Revancha" recarga la página igual que "Salir",
+enviando a ambos jugadores de vuelta al lobby por separado en vez de reiniciar
+la partida en la misma sala.
+
+## Descripción
+Al finalizar el juego, la pantalla de fin muestra dos botones: "Revancha" y "Salir".
+El botón "Revancha" actualmente ejecuta `window.location.reload()`, lo que es
+idéntico a "Salir": el jugador vuelve al lobby solo y pierde la conexión con
+su oponente. La revancha real debe reiniciar el estado de la sala en Firebase
+para que ambos jugadores puedan colocar sus barcos de nuevo sin salir de la sala.
+
+## Criterios de Aceptación
+- Al presionar "Revancha", el estado de la sala en Firebase se reinicia:
+  - `status` vuelve a `"placing"`
+  - `attacks` se vacía
+  - `winner` se pone en `null`
+  - `currentTurn` se pone en `null`
+  - `player1.ready` y `player2.ready` vuelven a `false`
+  - Los ships de ambos jugadores se limpian para permitir nueva colocación
+- Ambos clientes detectan el cambio de estado y transicionan a la fase de colocación
+- El jugador que presionó "Revancha" ve el tablero de colocación inmediatamente
+- El oponente también transiciona automáticamente a la fase de colocación
+- El botón "Salir" mantiene su comportamiento actual (recarga la página)
+- Si solo un jugador presiona "Revancha" y el otro ya salió, la sala queda en estado `"placing"` sin consecuencias
+
+## Notas Técnicas
+- Agregar función `resetRoom(roomId)` en `js/firebase-game.js` que resetee los campos indicados
+- El listener `onStatusChange` en `js/game.js` ya propaga cambios de estado; extenderlo para manejar la transición de `"finished"` a `"placing"`
+- La transición de vuelta a colocación debe limpiar el DOM del tablero propio (quitar ships colocados) y resetear `fleetState`
+- El botón "Revancha" llama a `resetRoom` en vez de `window.location.reload()`
+- Solo el jugador que presiona "Revancha" ejecuta el reset en Firebase; el oponente lo detecta vía listener
+```
+
+---
+
+## Issue 17 — Persistencia de Sesión ante Refresh
+
+**Título:** `feat: persistir sesión de juego para reconectar tras un refresh`
+
+**Cuerpo:**
+```
+Si un jugador recarga la página accidentalmente durante una partida, pierde
+toda la información de sesión (roomId, playerKey, playerId) y no puede volver
+al juego en curso. La partida queda en estado inconsistente para ambos jugadores.
+
+## Descripción
+Actualmente `playerId`, `window.Game.roomId` y `window.Game.playerKey` viven
+únicamente en memoria. Al recargar la página, se generan nuevos valores y el
+jugador queda desconectado de su sala sin forma de volver. El oponente ve
+que el jugador se desconectó y la partida queda bloqueada.
+
+La solución es guardar los datos de sesión en `sessionStorage` al conectarse a
+una sala y, al cargar la página, verificar si existe una sesión guardada para
+intentar reconectar automáticamente.
+
+## Criterios de Aceptación
+- Al crear o unirse a una sala, guardar en `sessionStorage`:
+  - `battleship_roomId`
+  - `battleship_playerKey` (`"player1"` o `"player2"`)
+  - `battleship_playerId`
+- Al cargar la página, si existen esos valores en `sessionStorage`:
+  - Intentar reconectar a la sala leyendo su estado actual en Firebase
+  - Si la sala existe y su `status` es `"placing"` o `"playing"`, saltear el lobby y llevar al jugador directamente a la fase correcta
+  - Si la sala no existe, tiene `status: "finished"` o `"waiting"`, limpiar `sessionStorage` y mostrar el lobby normalmente
+- La reconexión restaura el estado visual correcto según la fase:
+  - `"placing"`: mostrar tablero de colocación (con los barcos ya colocados si el jugador ya estaba listo)
+  - `"playing"`: mostrar el tablero de combate con todos los ataques aplicados
+- Al salir explícitamente (botón "Salir") limpiar `sessionStorage`
+- Usar `sessionStorage` (no `localStorage`) para que la sesión no persista entre pestañas distintas
+
+## Notas Técnicas
+- La lógica de reconexión va en `js/game.js`, antes de registrar los listeners del lobby
+- Usar `FirebaseGame.listenRoom` con los callbacks normales una vez reconectado
+- Si el jugador ya había marcado "Listo" (`playerKey.ready === true` en Firebase), restaurar `fleetState` desde `roomData[playerKey].ships` y saltar directo a esperar al oponente o al combate
+- `playerId` debe leerse desde `sessionStorage` en vez de generarse de nuevo, para que Firebase identifique al jugador correctamente si se usan reglas de seguridad basadas en el ID
+```
