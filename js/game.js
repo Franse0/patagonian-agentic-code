@@ -250,6 +250,19 @@ function checkVictoryCondition(myAttacks, opponentShips) {
       updateFleetPanels([]); // Renderizado inicial: todos intactos
     }
 
+    // Mostrar botón de toggle al iniciar combate
+    var toggleBtn = document.getElementById('btn-toggle-board');
+    if (toggleBtn && toggleBtn.hidden) {
+      toggleBtn.hidden = false;
+      toggleBtn.addEventListener('click', function () {
+        var container = document.getElementById('game-container');
+        var isShowingOwn = container.classList.toggle('--showing-own');
+        toggleBtn.setAttribute('aria-pressed', isShowingOwn ? 'true' : 'false');
+        toggleBtn.textContent = isShowingOwn ? 'Ver tablero enemigo' : 'Ver mi tablero';
+        toggleBtn.setAttribute('aria-label', isShowingOwn ? 'Ver tablero enemigo' : 'Ver mi tablero');
+      });
+    }
+
     _isMyTurn = (currentTurn === window.Game.playerKey);
     var indicator = document.getElementById('turn-indicator');
     if (indicator) {
@@ -345,6 +358,16 @@ function checkVictoryCondition(myAttacks, opponentShips) {
   function handleGameFinished(winnerKey) {
     var gameContainer = document.getElementById('game-container');
     var endScreen = document.getElementById('end-screen');
+
+    // Resetear toggle al finalizar partida
+    if (gameContainer) gameContainer.classList.remove('--showing-own');
+    var toggleBtn = document.getElementById('btn-toggle-board');
+    if (toggleBtn) {
+      toggleBtn.hidden = true;
+      toggleBtn.setAttribute('aria-pressed', 'false');
+      toggleBtn.textContent = 'Ver mi tablero';
+    }
+
     hideScreen(gameContainer);
     showScreen(endScreen);
 

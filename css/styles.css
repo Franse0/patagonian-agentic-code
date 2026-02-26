@@ -1015,8 +1015,53 @@ header {
   }
 }
 
+/* === Board toggle button === */
+#btn-toggle-board {
+  display: none; /* oculto en desktop por defecto */
+  padding: 0.5rem 1.1rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-heading);
+  background: var(--color-btn-bg);
+  border: 2px solid var(--color-border);
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+  align-self: center;
+}
+
+#btn-toggle-board:hover {
+  background: var(--color-btn-hover);
+  border-color: var(--color-btn-hover);
+}
+
+#btn-toggle-board[aria-pressed="true"] {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
 /* === Responsive === */
 @media (max-width: 900px) {
+  /* Mostrar botón de toggle solo en mobile */
+  #btn-toggle-board:not([hidden]) {
+    display: inline-flex;
+  }
+
+  /* Vista por defecto en combate: ocultar tablero propio, mostrar enemigo.
+     Se usa selector hermano para aplicar solo cuando el botón toggle es visible (combate). */
+  #btn-toggle-board:not([hidden]) ~ #player-column {
+    display: none;
+  }
+
+  /* Al activar el toggle: mostrar tablero propio, ocultar enemigo */
+  #game-container.--showing-own #player-column {
+    display: flex;
+  }
+
+  #game-container.--showing-own #enemy-column {
+    display: none;
+  }
+
   #game-container {
     flex-direction: column;
     align-items: center;
