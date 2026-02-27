@@ -379,8 +379,15 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     // Transición de pantalla
     var endScreen = document.getElementById('end-screen');
     var gameContainer = document.getElementById('game-container');
-    hideScreen(endScreen);
-    showScreen(gameContainer);
+    if (endScreen) {
+      endScreen.hidden = true;
+      endScreen.classList.remove('screen-visible', 'screen-transition', 'screen-entering');
+    }
+    if (gameContainer) {
+      gameContainer.hidden = false;
+      gameContainer.classList.remove('screen-entering', 'screen-transition');
+      gameContainer.classList.add('screen-visible');
+    }
 
     // Mostrar fase de colocación nuevamente
     var placementPhase = document.getElementById('placement-phase');
@@ -915,9 +922,8 @@ function checkVictoryCondition(myAttacks, opponentShips) {
     // --- Reconnection: restore session after refresh ---
     var savedSession = loadSession();
     if (savedSession) {
-      showSpinner();
-      hideScreen(homeScreen);
-      showScreen(lobbyScreen);
+      // Keep home screen visible with reconnecting indicator — don't flash lobby
+      if (homeScreen) homeScreen.setAttribute('data-reconnecting', '');
       try {
         var sess = savedSession;
         var reconnectResult = await FirebaseGame.reconnectRoom(sess.roomId, sess.playerId);
@@ -929,14 +935,12 @@ function checkVictoryCondition(myAttacks, opponentShips) {
         window.Game.playerName = sess.playerName;
         if (playerNameInput) playerNameInput.value = sess.playerName || '';
 
-        hideSpinner();
+        if (homeScreen) homeScreen.removeAttribute('data-reconnecting');
         await restoreGamePhase(reconnectResult.data);
       } catch (err) {
         clearSession();
-        hideSpinner();
-        // Show home screen normally
-        hideScreen(lobbyScreen);
-        showScreen(homeScreen);
+        if (homeScreen) homeScreen.removeAttribute('data-reconnecting');
+        // Home screen is already visible, nothing to do
       }
     }
 

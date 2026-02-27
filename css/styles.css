@@ -75,6 +75,21 @@ body {
   line-height: 1.6;
 }
 
+#home-screen[data-reconnecting] #btn-play,
+#home-screen[data-reconnecting] .home-description {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+#home-screen[data-reconnecting]::after {
+  content: 'Reconectando...';
+  position: absolute;
+  bottom: 2rem;
+  font-size: 0.9rem;
+  color: var(--color-primary);
+  letter-spacing: 0.04em;
+}
+
 #btn-play {
   padding: 0.85rem 3rem;
   font-size: 1.15rem;
