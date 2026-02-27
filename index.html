@@ -48,10 +48,6 @@
             aria-label="Ocultar mi tablero">
       Ocultar mi tablero
     </button>
-    <button id="btn-abandon" type="button"
-            aria-label="Abandonar la partida actual y volver al lobby">
-      Abandonar partida
-    </button>
     <!-- Columna del jugador local -->
     <section class="board-column" id="player-column">
       <h2>Tu tablero</h2>
@@ -115,7 +111,10 @@
 
     <!-- Chat panel (visible en desktop; oculto inicialmente en ambas vistas) -->
     <section id="chat-panel" class="chat-column" hidden aria-label="Chat con el oponente">
-      <h2 class="chat-heading">Chat</h2>
+      <div class="chat-heading">
+        <span>Chat</span>
+        <button id="btn-abandon" type="button" aria-label="Abandonar la partida actual y volver al lobby">Salir</button>
+      </div>
       <div id="chat-messages" class="chat-messages" role="log" aria-live="polite" aria-label="Mensajes del chat"></div>
       <form id="chat-form" class="chat-form" autocomplete="off">
         <input id="chat-input" type="text" maxlength="200" placeholder="Escribí un mensaje..." aria-label="Mensaje de chat">
